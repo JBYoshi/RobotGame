@@ -1,0 +1,49 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+    dependencies {
+        classpath 'nl.javadude.gradle.plugins:license-gradle-plugin:0.10.0'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.2'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'license'
+defaultTasks 'licenseFormat', 'build'
+
+group = 'jbyoshi'
+archivesBaseName = 'RobotGame'
+version = 'dev'
+
+license {
+    header file('gradle/HEADER.txt')
+    include 'src/**/*'
+    exclude 'src/*/resources/**/*'
+
+    ignoreFailures false
+    strictCheck true
+
+    mapping {
+        java = 'SLASHSTAR_STYLE'
+    }
+}
+processResources.from 'LICENSE.txt'
+
+sourceCompatibility = targetCompatibility = '1.8'
+
+apply plugin: 'application'
+mainClassName = 'jbyoshi.robotgame.RobotGame'
+jar.manifest.attributes('Main-Class': mainClassName)
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'com.google.guava:guava:19.0'
+    compile 'org.beanshell:bsh:2.0b5'
+}
