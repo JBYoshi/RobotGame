@@ -1,18 +1,11 @@
-buildscript {
-    repositories {
-        mavenCentral()
-        jcenter()
-    }
-    dependencies {
-        classpath 'nl.javadude.gradle.plugins:license-gradle-plugin:0.10.0'
-        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.2'
-    }
+plugins {
+    id 'java'
+    id 'eclipse'
+    id 'idea'
+    id 'application'
+    id 'com.github.hierynomus.license' version '0.12.1'
+    id 'com.github.johnrengelman.shadow' version '1.2.3'
 }
-
-apply plugin: 'java'
-apply plugin: 'eclipse'
-apply plugin: 'idea'
-apply plugin: 'license'
 defaultTasks 'licenseFormat', 'build'
 
 group = 'jbyoshi'
@@ -34,10 +27,8 @@ license {
 processResources.from 'LICENSE.txt'
 
 sourceCompatibility = targetCompatibility = '1.8'
-
-apply plugin: 'application'
 mainClassName = 'jbyoshi.robotgame.RobotGame'
-jar.manifest.attributes('Main-Class': mainClassName)
+shadowJar.classifier = ''
 
 repositories {
     mavenCentral()
