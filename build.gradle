@@ -37,4 +37,7 @@ repositories {
 dependencies {
     compile 'com.google.guava:guava:19.0'
     compile 'org.beanshell:bsh:2.0b5'
+    compile 'com.google.code.gson:gson:2.6.1'
 }
+
+apply from: file('deploy.gradle')

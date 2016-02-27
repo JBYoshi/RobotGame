@@ -1,0 +1,177 @@
+// This is for my own personal use, but you can take a look at it if you want.
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.google.code.gson:gson:2.6.1'
+    }
+}
+
+import com.google.gson.*
+
+import java.lang.reflect.Field
+import java.lang.reflect.Modifier
+
+def repoId = 'JBYoshi/RobotGame'
+def tag = 'development-build'
+
+Http.token = file('.git/gh-token').getText()
+class Http {
+    private static final gson = new Gson()
+    static String token
+    static InputStream requestRaw(String url, String method, InputStream input, Map<String, String> headers) {
+        def dest = new URL(url)
+        HttpURLConnection conn = (HttpURLConnection) dest.openConnection()
+        conn.setRequestMethod(method)
+        headers.forEach({k, v -> conn.addRequestProperty(k, v)})
+        conn.addRequestProperty("Authorization", "token $token")
+        if (input != null) {
+            conn.doOutput = true
+            def buf = new byte[65536], read, output = conn.outputStream
+            while ((read = input.read(buf)) > 0) output.write(buf, 0, read)
+            output.flush()
+        }
+        // To avoid hitting the rate limit
+        Thread.sleep((conn.getHeaderFieldInt("X-RateLimit-Limit", 0) / 3600 * 1000)
+                .setScale(0, BigDecimal.ROUND_CEILING).longValueExact());
+        def code = conn.responseCode
+        if (code >= 400) {
+            String msg
+            try {
+                JsonObject obj = new JsonParser().parse(conn.errorStream.newReader()).getAsJsonObject()
+                msg = "${obj.remove("message").getAsString()}"
+                obj.remove("documentation_url")
+                if (!obj.entrySet().isEmpty()) msg += "\n${gson.toJson(obj)}"
+            } catch (JsonSyntaxException e) {
+                e.printStackTrace()
+                msg = "$code ${conn.getResponseMessage()}"
+            }
+            throw new Error("$method ${dest.getPath()} returned error: $msg");
+        }
+        conn.inputStream
+    }
+
+    static def <T> T request(String url, String method, String input, Class<T> outputType) {
+        println "$method $url\n$input"
+        def inputStream
+        if (input != null) inputStream = new StringBufferInputStream(input) else inputStream = null
+        def raw = requestRaw(url, method, inputStream, new HashMap<>())
+        if (outputType == null) return null
+        return gson.fromJson(raw.newReader(), outputType)
+    }
+
+    static def <T> T get(String url, Class<T> outputType) { request(url, "GET", null, outputType) }
+    static void post(String url, Map<String, String> headers, InputStream is) { requestRaw(url, "POST", is, headers) }
+    static def <T> T patch(String url, Object data, Class<T> outputType) {
+        // GitHub custom method, need to add it to HttpURLConnection
+        def validMethods = HttpURLConnection.getDeclaredField("methods")
+        validMethods.accessible = true
+
+        def modifiersField = Field.getDeclaredField("modifiers");
+        modifiersField.accessible = true
+        modifiersField.setInt(validMethods, validMethods.getModifiers() & ~Modifier.FINAL)
+
+        String[] oldMethods = (String[]) validMethods.get(null)
+        if (!oldMethods.contains("PATCH")) {
+            String[] newMethods = new String[oldMethods.length + 1]
+            System.arraycopy(oldMethods, 0, newMethods, 0, oldMethods.length)
+            newMethods[oldMethods.length] = "PATCH"
+            validMethods.set(null, newMethods)
+        }
+        request(url, "PATCH", gson.toJson(data), outputType)
+    }
+    static def void delete(String url) { requestRaw(url, "DELETE", null, new HashMap<>()) }
+}
+
+class GitHub {
+    String repository_url
+    GHRepo repo(String id) {
+        int split = id.indexOf("/")
+        if (split < 0) {
+            throw new IllegalArgumentException("Must be of the form user/repo");
+        }
+        return Http.get(repository_url.replace("{owner}", id.substring(0, split)).replace("{repo}", id.substring(split + 1)),
+                GHRepo)
+    }
+
+    static GitHub getCom() {
+        Http.get("https://api.github.com", GitHub)
+    }
+}
+class GHRepo {
+    String releases_url
+    String git_refs_url
+    String default_branch
+    GHRelease getReleaseByTag(String tag) {
+        Http.get(releases_url.replace("{/id}", "/tags/$tag"), GHRelease)
+    }
+    void setRef(String name, GHRefUpdate update) {
+        Http.patch(git_refs_url.replace("{/sha}", "/$name"), update, null)
+    }
+}
+class GHRelease {
+    String upload_url
+    GHReleaseAsset[] assets
+    void addFile(File src, String mimeType) {
+        src.withInputStream { inputStream ->
+            Http.post("${upload_url.substring(0, upload_url.indexOf("{?"))}?name=${src.name}",
+                    ["Content-Type": mimeType], inputStream)
+        }
+    }
+}
+class GHReleaseAsset {
+    String url
+    void delete() {
+        Http.delete(url)
+    }
+}
+class GHRefUpdate {
+    String sha
+    boolean force
+    GHRefUpdate(String sha, boolean force) {
+        this.sha = sha
+        this.force = force
+    }
+}
+
+task deploy {
+    dependsOn 'shadowJar', 'build'
+
+    doLast {
+        GHRepo repo = GitHub.com.repo(repoId)
+        String sha = file('.git/HEAD').getText().trim()
+        if (sha.startsWith("ref: ")) {
+            if (!sha.equals("ref: refs/heads/${repo.default_branch}".toString())) {
+                throw new Error("You must be on ${repo.default_branch} to deploy!")
+            }
+            sha = file('.git/' + sha.substring('ref: '.length())).getText().trim()
+        }
+        GHRelease release = repo.getReleaseByTag(tag)
+        release.assets.each {it.delete()}
+        release.addFile(shadowJar.archivePath, "application/java-archive")
+        repo.setRef("tags/$tag", new GHRefUpdate(sha, true))
+    }
+}
+
+File updaterDir = new File(project.buildDir, "updater")
+def deleteRecursive(File path) throws FileNotFoundException {
+    if (!path.exists()) throw new FileNotFoundException(path.getAbsolutePath())
+    def ret = true
+    if (path.isDirectory()) path.listFiles().each {ret = ret && deleteRecursive(it)}
+    ret && path.delete()
+}
+task createUpdaterProperties << {
+    if (updaterDir.exists()) deleteRecursive(updaterDir)
+    Properties props = new Properties()
+    props.setProperty("commit", file(".git/${file(".git/HEAD").getText().substring("ref: ".length()).trim()}").getText()
+            .trim())
+    props.setProperty("tag", tag)
+    File updaterProperties = new File(updaterDir, 'jbyoshi/robotgame/util/updater/updater.properties')
+    updaterProperties.parentFile.mkdirs()
+    updaterProperties.withWriter { props.store(it, "Generated updater information file")}
+}
+processResources {
+    dependsOn 'createUpdaterProperties'
+    from(updaterDir).into('jbyoshi/robotgame/updater')
+}

@@ -33,12 +33,12 @@ import jbyoshi.robotgame.impl.PlayerImpl;
 import jbyoshi.robotgame.model.*;
 import jbyoshi.robotgame.script.*;
 import jbyoshi.robotgame.server.ServerThread;
+import jbyoshi.robotgame.util.updater.Update;
+import jbyoshi.robotgame.util.updater.Updater;
 
 public final class RobotGame {
 	public static void main(String[] args) {
-		JFrame frame = new JFrame();
-		frame.getContentPane().add(new JLabel("Starting up..."));
-		relaunch(frame);
+		relaunch(new JFrame());
 	}
 
 	private static final File scriptFile = new File("RobotGameScript.java");
@@ -47,9 +47,12 @@ public final class RobotGame {
 	@SuppressWarnings("unused")
 	public static void main(JFrame frame) {
 		frame.setTitle("Robot Game");
+		frame.getContentPane().add(new JLabel("Starting up..."));
 		frame.setSize(900, 700);
 		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		frame.setVisible(true);
+
+		Updater updater =  Updater.getUpdater("https://api.github.com/repos/JBYoshi/RobotGame");
 
 		PlayerImpl red = new PlayerImpl("Red", new Color(235, 0, 0)); // Should not be exactly Color.RED as that's the damage flash color.
 		PlayerImpl orange = new PlayerImpl("Orange", new Color(255, 127, 0));
@@ -65,13 +68,22 @@ public final class RobotGame {
 		Thread gameThread = new Thread(() -> {
 			boolean first = true;
 			while (!Thread.currentThread().isInterrupted()) {
+				try {
+					final Optional<Update> update = updater.checkForUpdates();
+					if (update.isPresent()) {
+						installUpdate(frame, update.get(), Thread.currentThread());
+						return;
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 				int numPlayersPerGame = 4;
 				List<PlayerImpl> currentPlayers = new ArrayList<>(numPlayersPerGame);
 				for (int playerNum = 0; playerNum < numPlayersPerGame; playerNum++) {
 					int random = (int) (Math.random() * (allPlayers.length - playerNum));
-					int i = -1;
+					int i = 0;
 					do {
-						while (currentPlayers.contains(allPlayers[++i])) ;
+						while (currentPlayers.contains(allPlayers[i])) i++;
 						random--;
 					} while (random >= 0);
 					assert !currentPlayers.contains(allPlayers[i]);
@@ -93,30 +105,7 @@ public final class RobotGame {
 					public ScriptThread apply(PlayerImpl player) {
 						if (firstScript) {
 							firstScript = false;
-							return new DrawScriptThread(player, script, draw -> {
-								frame.getContentPane().removeAll();
-								frame.getContentPane().add(draw);
-								JPanel buttonPanel = new JPanel(new GridLayout(1, 0));
-
-								JButton edit = new JButton("Edit Script");
-								edit.addActionListener(event -> {
-									try {
-										openEditor();
-									} catch (IOException e) {
-										JOptionPane.showMessageDialog(frame, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-									}
-								});
-								buttonPanel.add(edit);
-
-								JButton update = new JButton("Reload Script");
-								Thread gameThreadInside = Thread.currentThread();
-								update.addActionListener(event -> reloadScript(frame));
-								buttonPanel.add(update);
-
-								frame.getContentPane().add(buttonPanel, BorderLayout.SOUTH);
-
-								frame.revalidate();
-							});
+							return new DrawScriptThread(player, script, draw -> setupGuiIngame(draw, frame));
 						}
 						return new ScriptThread(player, script);
 					}
@@ -131,6 +120,29 @@ public final class RobotGame {
 			}
 		} , "Game Loop");
 		gameThread.start();
+	}
+
+	private static void setupGuiIngame(JComponent draw, JFrame frame) {
+		frame.getContentPane().removeAll();
+		frame.getContentPane().add(draw);
+		JPanel buttonPanel = new JPanel(new GridLayout(1, 0));
+
+		JButton edit = new JButton("Edit Script");
+		edit.addActionListener(event -> {
+            try {
+                openEditor();
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(frame, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+		buttonPanel.add(edit);
+
+		JButton update = new JButton("Reload Script");
+		update.addActionListener(event -> reloadScript(frame));
+		buttonPanel.add(update);
+
+		frame.getContentPane().add(buttonPanel, BorderLayout.SOUTH);
+		frame.revalidate();
 	}
 
 	private static void reloadScript(JFrame frame) {
@@ -163,13 +175,8 @@ public final class RobotGame {
 		}
 	}
 
-	// For future use.
 	@SuppressWarnings("unused")
-	private static void reloadClasses(JFrame frame, Thread gameThread) {
-		frame.getContentPane().removeAll();
-		frame.getContentPane().add(new JLabel("Updating..."));
-		frame.revalidate();
-		frame.repaint();
+	private static void installUpdate(JFrame frame, Update update, Thread gameThread) {
 		new Thread(() -> {
 			gameThread.interrupt();
 			try {
@@ -177,6 +184,24 @@ public final class RobotGame {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
+
+			// Load update installation classes ahead of time.
+			new ResourceClassLoader();
+			new BootstrapClassLoader();
+
+			frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+			try {
+				update.install(frame);
+				// From this point on, no new code can be loaded!
+			} catch (Throwable e) {
+				e.printStackTrace();
+				JOptionPane.showMessageDialog(frame, new String[] {
+						"Something went wrong during the update. Your game is",
+						"probably corrupted. You can redownload it at:",
+						"https://github.com/JBYoshi/RobotGame/releases/latest"}, "Error", JOptionPane.ERROR_MESSAGE);
+				System.exit(1);
+			}
+			frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 			relaunch(frame);
 		}, "Updater").start();
 	}
@@ -186,13 +211,15 @@ public final class RobotGame {
 			ClassLoader loader = new ResourceClassLoader(new BootstrapClassLoader());
 			loader.loadClass(RobotGame.class.getName())
 					.getMethod("main", JFrame.class).invoke(null, frame);
-		} catch (InvocationTargetException e) {
-			if (e.getCause() instanceof Error) {
-				throw (Error) e.getCause();
-			}
-			e.getCause().printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
+		} catch (Throwable e) {
+			if (e instanceof InvocationTargetException) e = e.getCause();
+			e.printStackTrace();
+			StringWriter writer = new StringWriter();
+			writer.write("Something went wrong, and the game crashed.\n");
+			writer.write("Please post the following text at https://github.com/JBYoshi/RobotGame/issues:\n");
+			e.printStackTrace(new PrintWriter(writer));
+			JOptionPane.showMessageDialog(frame, writer.toString().split("\n"), "Crashed!",
+					JOptionPane.ERROR_MESSAGE);
         }
 	}
 

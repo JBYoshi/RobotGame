@@ -17,6 +17,7 @@
 package jbyoshi.robotgame;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -34,7 +35,7 @@ public class ResourceClassLoader extends ClassLoader {
 		final String classFile = name.replace('.', '/') + ".class";
 		URL resource = getResource(classFile);
 		if (resource == null) {
-			throw new ClassNotFoundException(name);
+			throw new ClassNotFoundException(name, new FileNotFoundException(classFile));
 		}
 
 		final String pkg = name.substring(0, name.lastIndexOf('.'));
