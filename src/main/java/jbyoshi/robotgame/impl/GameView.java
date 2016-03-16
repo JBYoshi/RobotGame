@@ -131,6 +131,11 @@ public final class GameView implements Game {
 				.map(objects::get);
 	}
 
+	@Override
+	public boolean isWall(Point point) {
+		return model.map[point.getX()][point.getY()];
+	}
+
 	private void getObjectsNear(Point loc, int distance, Set<Point> checked, Set<ModelView<?>> out) {
 		if (checked.add(loc)) {
 			model.getModelsAt(loc).stream().map(views).forEach(out::add);

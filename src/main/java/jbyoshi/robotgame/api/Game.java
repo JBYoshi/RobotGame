@@ -23,7 +23,7 @@ public interface Game {
 	int WORLD_SIZE = 50;
 
 	default boolean isWalkable(Point loc) {
-		return true;
+		return !isWall(loc);
 	}
 
 	Set<? extends MyRobot> getMyRobots();
@@ -62,4 +62,6 @@ public interface Game {
 
 	<T extends ObjectInGame> Optional<T> findNearest(Point start, Class<T> type, Predicate<T> acceptTarget,
 													 Predicate<Point> acceptLocation);
+
+	boolean isWall(Point loc);
 }

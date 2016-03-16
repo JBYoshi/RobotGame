@@ -45,7 +45,7 @@ public final class ServerThread implements Runnable {
     @Override
     public void run() {
         for (PlayerConnection conn : this.scripts) {
-            conn.gameStarted(game.clone());
+            conn.gameStarted(new GameModel(game));
         }
         while (game.isRunning()) {
             if (Thread.currentThread().isInterrupted()) {

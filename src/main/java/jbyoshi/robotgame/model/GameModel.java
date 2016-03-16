@@ -17,6 +17,7 @@
 package jbyoshi.robotgame.model;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.HashMultimap;
@@ -25,12 +26,31 @@ import com.google.common.collect.Multimap;
 import jbyoshi.robotgame.action.*;
 import jbyoshi.robotgame.api.Point;
 import jbyoshi.robotgame.impl.PlayerImpl;
+import jbyoshi.robotgame.util.MapGen;
 
 public final class GameModel {
 	private final Multimap<Class<? extends Model>, Model> modelsByType = HashMultimap.create();
 	private final Map<UUID, Model> modelsById = new HashMap<>();
 	private boolean ended;
 	private PlayerImpl winner = null;
+	public final boolean[][] map;
+
+	public GameModel() {
+		map = MapGen.createMap();
+	}
+
+	public GameModel(GameModel other) {
+		map = new boolean[other.map.length][other.map[0].length];
+		for (int x = 0; x < map.length; x++) {
+			for (int y = 0; y < map[0].length; y++) {
+				map[x][y] = other.map[x][y];
+			}
+		}
+
+		other.modelsById.values().stream().map(Model::clone).forEach(this::add);
+		ended = other.ended;
+		winner = other.winner;
+	}
 
 	public <T extends Model> Set<T> getModels(Class<T> type) {
 		return ImmutableSet.copyOf((Set<T>) modelsByType.get(type));
@@ -99,17 +119,5 @@ public final class GameModel {
 
 	public PlayerImpl getWinner() {
 		return winner;
-	}
-
-	// Object.clone() doesn't work with final fields, but I don't want to break
-	// the contract. (IntelliJ warning)
-	@SuppressWarnings("CloneDoesntCallSuperClone")
-	@Override
-	public GameModel clone() {
-		GameModel out = new GameModel();
-		modelsById.values().stream().map(Model::clone).forEach(out::add);
-		out.ended = ended;
-		out.winner = winner;
-		return out;
 	}
 }

@@ -20,7 +20,6 @@ final class UpdaterImpl extends Updater {
 
     UpdaterImpl(String repoApiUrl) throws NotSupportedException, IOException {
         URL updaterProperties = getClass().getResource("updater.properties");
-        if (updaterProperties != null) System.out.println(updaterProperties.getProtocol());
         if (updaterProperties == null || !updaterProperties.getProtocol().equals("jar")) {
             throw new NotSupportedException();
         }

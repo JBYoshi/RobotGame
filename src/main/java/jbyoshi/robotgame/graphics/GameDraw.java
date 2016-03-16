@@ -35,7 +35,7 @@ final class GameDraw {
 	final GameComponent component = new GameComponent(this);
 
 	GameDraw(GameModel basedOn) {
-		game = basedOn.clone();
+		game = new GameModel(basedOn);
 		game.getAllModels().forEach(model -> this.createSprite(model, SpriteState.CONTINUOUS));
 		sprites.values().forEach(Sprite::preTick);
 		sprites.values().forEach(Sprite::postTick);
@@ -48,7 +48,7 @@ final class GameDraw {
 
 		sprites.values().forEach(Sprite::preTick);
 
-		// Keep this synchronized block fast.
+		// Keep this synchronized block fast. It can hold up the event thread.
 		synchronized (game) {
 			game.preTick();
 			game.postTick(actions);
@@ -102,6 +102,15 @@ final class GameDraw {
 			return new BufferedImage[]{component.createLayer(g -> {
 				g.setColor(new Color(75, 75, 75));
 				g.fill(new Rectangle2D.Double(0, 0, component.getGameSize(), component.getGameSize()));
+				g.scale(component.getGridSpotSize(), component.getGridSpotSize());
+				g.setColor(new Color(40, 40, 40));
+				for (int x = 0; x < game.map.length; x++) {
+					for (int y = 0; y < game.map[0].length; y++) {
+						if (game.map[x][y]) {
+							g.fillRect(x, y, 1, 1);
+						}
+					}
+				}
 			}), component.createLayer(g -> {
 				g.scale(component.getGridSpotSize(), component.getGridSpotSize());
 				sprites.values().forEach(sprite -> sprite.draw((Graphics2D) g.create(), renderTicks));
