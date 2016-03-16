@@ -67,12 +67,12 @@ class Http {
         def validMethods = HttpURLConnection.getDeclaredField("methods")
         validMethods.accessible = true
 
+        def modifiersField = Field.getDeclaredField("modifiers");
+        modifiersField.accessible = true
+        modifiersField.setInt(validMethods, validMethods.getModifiers() & ~Modifier.FINAL)
+
         String[] oldMethods = (String[]) validMethods.get(null)
         if (!oldMethods.contains("PATCH")) {
-            def modifiersField = Field.getDeclaredField("modifiers");
-            modifiersField.accessible = true
-            modifiersField.setInt(validMethods, validMethods.getModifiers() & ~Modifier.FINAL)
-
             String[] newMethods = new String[oldMethods.length + 1]
             System.arraycopy(oldMethods, 0, newMethods, 0, oldMethods.length)
             newMethods[oldMethods.length] = "PATCH"
