@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -30,7 +31,7 @@ final class UpdaterImpl extends Updater {
         }
         jarFile = jarFile.substring("file:".length());
         while (jarFile.startsWith("/")) jarFile = jarFile.substring(1);
-        currentJar = new File(jarFile.substring(0, jarFile.indexOf("!/")));
+        currentJar = new File(URLDecoder.decode(jarFile.substring(0, jarFile.indexOf("!/")), "US-ASCII"));
 
         Properties props = new Properties();
         try (InputStream in = updaterProperties.openStream()) {
