@@ -1,6 +1,7 @@
 package jbyoshi.robotgame.gui;
 
 import jbyoshi.robotgame.RobotGame;
+import jbyoshi.robotgame.idetemplates.IdeProjectGenerator;
 import jbyoshi.robotgame.util.GameJar;
 
 import java.io.*;
@@ -23,7 +24,7 @@ public final class ScriptStorage implements Comparable<ScriptStorage> {
         if (!getMainFile().exists()) throw new FileNotFoundException(getMainFile().toString());
 
         if (GameJar.getGameJar() != null) {
-            generateIdeFiles();
+            IdeProjectGenerator.generateIdeFiles(root);
         } else {
             System.out.println("Running outside of JAR, cannot setup IDE projects.");
             System.out.println("To test the creation of IDE projects, please use gradlew runShadow.");
@@ -47,38 +48,6 @@ public final class ScriptStorage implements Comparable<ScriptStorage> {
         listRecursive(srcDir, files);
         files.remove(new File(srcDir, mainClassName.replace('.', File.separatorChar) + ".java"));
         return files;
-    }
-
-    private void generateIdeFiles() throws IOException {
-        // Eclipse
-        generateIdeFile(".project");
-        generateIdeFile(".classpath");
-        if (!new File(root, ".settings").mkdir()) throw new IOException("Could not create .settings/");
-        generateIdeFile(".settings/org.eclipse.jdt.core.prefs");
-
-        // IntelliJ
-        generateIdeFile("$PROJECT_NAME$.ipr");
-        generateIdeFile("$PROJECT_NAME$.iml");
-        generateIdeFile("$PROJECT_NAME$.iws");
-    }
-
-    private void generateIdeFile(String name) throws IOException {
-        StringBuilder data = new StringBuilder();
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(
-                RobotGame.class.getResourceAsStream("idetemplates/" + name)))) {
-            String line;
-            while ((line = in.readLine()) != null) data.append(line).append("\n");
-        }
-        try (FileWriter out = new FileWriter(new File(root, name.replace("$PROJECT_NAME$", root.getName())))) {
-            out.write(data.toString().replace("$PROJECT_NAME$", xmlEscape(root.getName()))
-                    .replace("$GAME$", xmlEscape(GameJar.getGameJar().getAbsolutePath())));
-            out.flush();
-        }
-    }
-
-    private static String xmlEscape(String s) {
-        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("'", "&apos;")
-                .replace("\"", "&quot;");
     }
 
     @Override

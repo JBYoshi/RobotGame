@@ -18,6 +18,17 @@
   <component name="DependencyValidationManager">
     <option name="SKIP_IMPORT_STATEMENTS" value="false"/>
   </component>
+  <component name="libraryTable">
+    <library name="RobotGame">
+      <CLASSES>
+        <root url="jar://$GAME$!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$GAME$!/" />
+      </SOURCES>
+    </library>
+  </component>
   <component name="Encoding" useUTFGuessing="true" native2AsciiForPropertiesFiles="false"/>
   <component name="IdProvider" IDEtalkID="11DA1DB66DD62DDA1ED602B7079FE97C"/>
   <component name="JavadocGenerationManager">
