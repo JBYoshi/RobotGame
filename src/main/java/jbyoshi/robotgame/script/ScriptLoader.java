@@ -145,7 +145,6 @@ public final class ScriptLoader {
 					className = "<script file>";
 				}
 			} else {
-				// TODO
 				className = "<unknown>";
 				methodName = "<unknown>";
 			}

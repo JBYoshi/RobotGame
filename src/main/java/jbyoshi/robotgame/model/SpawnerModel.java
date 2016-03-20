@@ -36,7 +36,7 @@ public final class SpawnerModel extends AttackableModel implements OwnedModel {
 		if (spawningRobot != null) {
 			throw new IllegalStateException("Already spawning!");
 		}
-		countdown = totalCountdown = 5; // TODO change the 5
+		countdown = totalCountdown = 5;
 		spawningRobot = new RobotModel(player, loc);
 		if (id != null) {
 			spawningRobot.setId(id);
