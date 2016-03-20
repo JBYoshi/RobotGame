@@ -81,13 +81,60 @@ public final class ScriptSelectionComponent extends JPanel {
             return label;
         });
         list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        list.addListSelectionListener(e -> {
-            resultListener.accept(list.getSelectedValue());
-            list.setSelectedValue(null, false);
+        list.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    resultListener.accept(list.getSelectedValue());
+                    list.setSelectedValue(null, false);
+                }
+            }
         });
 
         add(new JScrollPane(list));
 
-        // TODO button to create a new script
+        JButton createNew = new JButton("Create");
+        createNew.addActionListener(e -> {
+            // TODO
+        });
+
+        JButton openInIde = new JButton("Open in IDE");
+        openInIde.addActionListener(e -> showIdeDialog(list.getSelectedValue()));
+        openInIde.setEnabled(false);
+
+        Box toolbar = Box.createHorizontalBox();
+        toolbar.add(createNew);
+        toolbar.add(openInIde);
+        add(toolbar, BorderLayout.SOUTH);
+
+        list.addListSelectionListener(e -> {
+            if (list.getSelectedValue() == null) {
+                openInIde.setEnabled(false);
+            } else {
+                openInIde.setEnabled(true);
+            }
+        });
+    }
+
+    private void showIdeDialog(ScriptStorage script) {
+        JTextField eclipseDirTextField = new JTextField(script.getRootDir().getAbsolutePath());
+        eclipseDirTextField.setEditable(false);
+        JTextField intellijDirTextField = new JTextField(script.getRootDir().getAbsolutePath());
+        intellijDirTextField.setEditable(false);
+        JOptionPane.showMessageDialog(this, new Object[] {
+                "To open in Eclipse:",
+                "- Go to File > Import > General > Existing projects into workspace.",
+                "- Copy the following text into the \"Root directory\" text box:",
+                eclipseDirTextField,
+                "- Press Enter, then click Finish.",
+                Box.createVerticalStrut(16),
+                "To open in IntelliJ IDEA:",
+                "- From the Welcome screen, click Open, or from an existing project, click File > Open.",
+                "- Copy the following text into the text box:",
+                intellijDirTextField,
+                "- Press Enter.",
+                Box.createVerticalStrut(16),
+                "Whenever you change your code, be sure to click the Reload Script button to upload your changes."
+        }, "Open in IDE", JOptionPane.PLAIN_MESSAGE);
     }
 }
