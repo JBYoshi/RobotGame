@@ -1,10 +1,10 @@
-.project
-.classpath
-.settings/
-.idea/
-*.ipr
-*.iml
-.gradle/
-build/
+/.project
+/.classpath
+/.settings/
+/.idea/
+/*.ipr
+/*.iml
+/.gradle/
+/build/
 
 RobotGameScript

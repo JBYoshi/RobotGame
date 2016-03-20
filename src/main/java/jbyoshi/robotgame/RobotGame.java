@@ -27,11 +27,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.swing.*;
-import javax.swing.plaf.ColorUIResource;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.plaf.metal.DefaultMetalTheme;
 import javax.swing.plaf.metal.MetalLookAndFeel;
-import javax.swing.plaf.metal.MetalTheme;
 
 import jbyoshi.robotgame.api.Game;
 import jbyoshi.robotgame.api.Point;
@@ -308,12 +306,13 @@ public final class RobotGame {
 			e.printStackTrace(new PrintWriter(writer));
 			JOptionPane.showMessageDialog(frame, writer.toString().split("\n"), "Crashed!",
 					JOptionPane.ERROR_MESSAGE);
+			System.exit(1);
         }
 	}
 
 	private static void openEditor() throws IOException {
 		if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
-			Desktop.getDesktop().open(selectedScript.root);
+			Desktop.getDesktop().open(selectedScript.getRootDir());
 		} else {
 			throw new IOException("Your system doesn't seem to support opening files.");
 		}

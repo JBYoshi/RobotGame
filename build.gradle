@@ -28,7 +28,11 @@ processResources.from 'LICENSE.txt'
 
 sourceCompatibility = targetCompatibility = '1.8'
 mainClassName = 'jbyoshi.robotgame.RobotGame'
-shadowJar.classifier = ''
+
+shadowJar {
+    classifier = ''
+    from sourceSets.main.allSource
+}
 
 repositories {
     mavenCentral()

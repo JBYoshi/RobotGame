@@ -11,8 +11,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Vector;
 import java.util.function.Consumer;
 
@@ -25,8 +25,14 @@ public final class ScriptSelectionComponent extends JPanel {
         Vector<ScriptStorage> files = new Vector<>();
         if (Files.isRegularFile(scriptListFile)) {
             try {
-                Files.readAllLines(scriptListFile).stream().map(ScriptStorage::new).forEach(files::add);
-                Collections.sort(files, Comparator.comparing(s -> s.mainClassName));
+                Files.readAllLines(scriptListFile).stream().flatMap(line -> {
+                    try {
+                        return Arrays.stream(new ScriptStorage[] {new ScriptStorage(line)});
+                    } catch (IOException e) {
+                        return Arrays.stream(new ScriptStorage[0]);
+                    }
+                }).forEach(files::add);
+                Collections.sort(files);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -35,11 +41,10 @@ public final class ScriptSelectionComponent extends JPanel {
         if (new File("RobotGameScript.java").exists()) {
             File dir = new File("RobotGameScript");
             if ((dir.isDirectory() || dir.mkdirs()) && new File("RobotGameScript.java")
-                    .renameTo(new File(dir, "RobotGameScript.java"))) {
-                files.add(new ScriptStorage(dir.getAbsolutePath() + " RobotGameScript"));
-                Collections.sort(files, Comparator.comparing(s -> s.mainClassName));
-
+                    .renameTo(new File(dir, "src/RobotGameScript.java"))) {
                 try {
+                    files.add(new ScriptStorage(dir.getAbsolutePath() + " RobotGameScript"));
+                    Collections.sort(files);
                     Files.write(scriptListFile, files.stream().<CharSequence>map(ScriptStorage::toString)::iterator);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -51,7 +56,7 @@ public final class ScriptSelectionComponent extends JPanel {
 
         JList<ScriptStorage> list = new JList<>(files);
         list.setCellRenderer((listSelf, value, index, isSelected, cellHasFocus) -> {
-            JLabel label = new JLabel(value.mainClassName);
+            JLabel label = new JLabel(value.getMainClassName());
             Color defaultColor = label.getForeground();
             if (isSelected) {
                 label.setOpaque(true);
