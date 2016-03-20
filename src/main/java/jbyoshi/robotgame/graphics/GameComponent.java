@@ -31,10 +31,8 @@ final class GameComponent extends JComponent {
     private int lastMouseX, lastMouseY;
     private double drawX, drawY;
     private double zoom = 16.0;
-    private BufferedImage[] layers;
+    private BufferLayer[] layers;
     private final Object bufferLock = new Object();
-    private String message;
-    private Color messageColor;
 
     GameComponent(GameDraw draw) {
         this.draw = draw;
@@ -99,27 +97,15 @@ final class GameComponent extends JComponent {
     @Override
     public void paintComponent(Graphics basicGraphics) {
         Graphics2D g = (Graphics2D) basicGraphics;
+        g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 24));
+
         synchronized (bufferLock) {
             if (layers == null) {
                 // Too slow.
                 layers = draw.updateBuffer();
             }
-
-            double size = getGameSize();
-            for (BufferedImage layer : layers) {
-                for (double x = -size; x < getWidth(); x += size) {
-                    for (double y = -size; y < getHeight(); y += size) {
-                        AffineTransform transform = new AffineTransform();
-                        transform.translate(drawX * zoom + x - zoom, drawY * zoom + y - zoom);
-                        g.drawRenderedImage(layer, transform);
-                    }
-                }
-            }
-
-            if (message != null) {
-                g.setColor(messageColor);
-                g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 24));
-                g.drawString(message, getWidth() / 2.0f - g.getFontMetrics().stringWidth(message) / 2.0f, getHeight() / 2.0f);
+            for (BufferLayer layer : layers) {
+                layer.paint(this, g);
             }
         }
 
@@ -152,14 +138,7 @@ final class GameComponent extends JComponent {
         repaint();
     }
 
-    void setMessage(Color c, String message) {
-        synchronized (bufferLock) {
-            this.messageColor = c;
-            this.message = message;
-        }
-    }
-
-    BufferedImage createLayer(Consumer<Graphics2D> drawCode) {
+    BufferLayer createLayer(Consumer<Graphics2D> drawCode) {
         double size = getGameSize();
         int imgSize = (int) Math.ceil(size + 2 * zoom);
         BufferedImage img = new BufferedImage(imgSize, imgSize, BufferedImage.TYPE_INT_ARGB);
@@ -167,6 +146,18 @@ final class GameComponent extends JComponent {
         imgGraphics.translate(zoom, zoom);
         drawCode.accept(imgGraphics);
         imgGraphics.dispose();
-        return img;
+        return (comp, g) -> {
+            for (double x1 = -size; x1 < getWidth(); x1 += size) {
+                for (double y1 = -size; y1 < getHeight(); y1 += size) {
+                    AffineTransform tx = new AffineTransform();
+                    tx.translate(drawX * zoom + x1 - zoom, drawY * zoom + y1 - zoom);
+                    g.drawRenderedImage(img, tx);
+                }
+            }
+        };
+    }
+
+    interface BufferLayer {
+        void paint(GameComponent comp, Graphics2D g);
     }
 }

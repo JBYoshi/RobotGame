@@ -18,7 +18,6 @@ package jbyoshi.robotgame.graphics;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
@@ -87,19 +86,26 @@ final class GameDraw {
 		sprite.postTick();
 	}
 
-	BufferedImage[] updateBuffer() {
+	GameComponent.BufferLayer[] updateBuffer() {
 		float renderTicks = Math.min((System.nanoTime() - paintStart) / (float) TimeUnit.MILLISECONDS.toNanos(500), 1);
 
 		synchronized (game) {
+			String message;
+			Color messageColor;
 			if (renderTicks == 1 && !game.isRunning()) {
 				if (game.getWinner() == null) {
-					component.setMessage(Color.WHITE, "It's a tie!");
+					message = "It's a tie!";
+					messageColor = Color.WHITE;
 				} else {
-					component.setMessage(game.getWinner().getColor(), game.getWinner().getName() + " wins!");
+					message = game.getWinner().getName() + " wins!";
+					messageColor = game.getWinner().getColor();
 				}
+			} else {
+				message = null;
+				messageColor = null;
 			}
 
-			return new BufferedImage[]{component.createLayer(g -> {
+			return new GameComponent.BufferLayer[] {component.createLayer(g -> {
 				g.setColor(new Color(75, 75, 75));
 				g.fill(new Rectangle2D.Double(0, 0, component.getGameSize(), component.getGameSize()));
 				g.scale(component.getGridSpotSize(), component.getGridSpotSize());
@@ -117,7 +123,13 @@ final class GameDraw {
 			}), component.createLayer(g -> {
 				g.setColor(Color.BLUE);
 				g.draw(new Rectangle2D.Double(0, 0, component.getGameSize(), component.getGameSize()));
-			})};
+			}), (comp, g) -> {
+				if (message != null) {
+					g.setColor(messageColor);
+					g.drawString(message, comp.getWidth() / 2 - g.getFontMetrics().stringWidth(message) / 2,
+							comp.getHeight() / 2 - g.getFontMetrics().getHeight() / 2);
+				}
+			}};
 		}
 	}
 
