@@ -94,7 +94,7 @@ final class GameDraw {
 			Color messageColor;
 			if (renderTicks == 1 && !game.isRunning()) {
 				if (game.getWinner() == null) {
-					message = "It's a tie!";
+					message = game.ticks == GameModel.MAX_TICKS ? "Time's up!" : "It's a tie!";
 					messageColor = Color.WHITE;
 				} else {
 					message = game.getWinner().getName() + " wins!";
@@ -104,6 +104,9 @@ final class GameDraw {
 				message = null;
 				messageColor = null;
 			}
+
+			int ticksLeft = GameModel.MAX_TICKS - game.ticks;
+			String timeLeft = String.format("%02d:%02d", ticksLeft / 60, ticksLeft % 60);
 
 			return new GameComponent.BufferLayer[] {component.createLayer(g -> {
 				g.setColor(new Color(75, 75, 75));
@@ -124,6 +127,10 @@ final class GameDraw {
 				g.setColor(Color.BLUE);
 				g.draw(new Rectangle2D.Double(0, 0, component.getGameSize(), component.getGameSize()));
 			}), (comp, g) -> {
+				g.setColor(Color.WHITE);
+				g.drawString(timeLeft, comp.getWidth() / 2 - g.getFontMetrics().stringWidth(timeLeft) / 2,
+						10 + g.getFontMetrics().getHeight());
+
 				if (message != null) {
 					g.setColor(messageColor);
 					g.drawString(message, comp.getWidth() / 2 - g.getFontMetrics().stringWidth(message) / 2,

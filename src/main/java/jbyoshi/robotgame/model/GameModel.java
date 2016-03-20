@@ -17,7 +17,6 @@
 package jbyoshi.robotgame.model;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.HashMultimap;
@@ -34,6 +33,8 @@ public final class GameModel {
 	private boolean ended;
 	private PlayerImpl winner = null;
 	public final boolean[][] map;
+	public int ticks;
+	public static final int MAX_TICKS = 15 * 60;
 
 	public GameModel() {
 		map = MapGen.createMap();
@@ -87,15 +88,19 @@ public final class GameModel {
 		}
 		new LinkedList<>(modelsById.values()).forEach(Model::onTickEnd);
 
+		ticks++;
+
 		boolean ended = true;
 		PlayerImpl player = null;
-		for (Model model : modelsById.values()) {
-			if (model instanceof OwnedModel) {
-				if (player == null) {
-					player = ((OwnedModel) model).getPlayer();
-				} else if (!player.equals(((OwnedModel) model).getPlayer())) {
-					ended = false;
-					break;
+		if (ticks < MAX_TICKS) {
+			for (Model model : modelsById.values()) {
+				if (model instanceof OwnedModel) {
+					if (player == null) {
+						player = ((OwnedModel) model).getPlayer();
+					} else if (!player.equals(((OwnedModel) model).getPlayer())) {
+						ended = false;
+						break;
+					}
 				}
 			}
 		}
