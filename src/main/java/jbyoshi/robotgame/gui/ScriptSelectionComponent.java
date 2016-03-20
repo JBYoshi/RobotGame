@@ -1,12 +1,17 @@
 package jbyoshi.robotgame.gui;
 
+import jbyoshi.robotgame.api.Game;
 import jbyoshi.robotgame.graphics.RGColors;
 
 import javax.swing.*;
+import javax.swing.event.ListDataEvent;
+import javax.swing.event.ListDataListener;
+import javax.swing.filechooser.FileFilter;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,44 +22,14 @@ import java.util.Vector;
 import java.util.function.Consumer;
 
 public final class ScriptSelectionComponent extends JPanel {
+    private static final Path SCRIPT_LIST_FILE = Paths.get(System.getProperty("user.home"), "rg-scripts");
+
     public ScriptSelectionComponent(Consumer<ScriptStorage> resultListener) {
         super(new BorderLayout());
 
-        final Path scriptListFile = Paths.get(System.getProperty("user.home"), "rg-scripts");
+        Vector<ScriptStorage> scriptList = loadScriptList();
 
-        Vector<ScriptStorage> files = new Vector<>();
-        if (Files.isRegularFile(scriptListFile)) {
-            try {
-                Files.readAllLines(scriptListFile).stream().flatMap(line -> {
-                    try {
-                        return Arrays.stream(new ScriptStorage[] {new ScriptStorage(line)});
-                    } catch (IOException e) {
-                        return Arrays.stream(new ScriptStorage[0]);
-                    }
-                }).forEach(files::add);
-                Collections.sort(files);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        if (new File("RobotGameScript.java").exists()) {
-            File dir = new File("RobotGameScript");
-            if ((dir.isDirectory() || dir.mkdirs()) && new File("RobotGameScript.java")
-                    .renameTo(new File(dir, "src/RobotGameScript.java"))) {
-                try {
-                    files.add(new ScriptStorage(dir.getAbsolutePath() + " RobotGameScript"));
-                    Collections.sort(files);
-                    Files.write(scriptListFile, files.stream().<CharSequence>map(ScriptStorage::toString)::iterator);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                System.err.println("Failed to import legacy script file");
-            }
-        }
-
-        JList<ScriptStorage> list = new JList<>(files);
+        JList<ScriptStorage> list = new JList<>(scriptList);
         list.setCellRenderer((listSelf, value, index, isSelected, cellHasFocus) -> {
             JLabel label = new JLabel(value.getMainClassName());
             Color defaultColor = label.getForeground();
@@ -95,7 +70,164 @@ public final class ScriptSelectionComponent extends JPanel {
 
         JButton createNew = new JButton("Create");
         createNew.addActionListener(e -> {
-            // TODO
+            JFileChooser chooser = new JFileChooser();
+            chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            FileFilter filter = new FileFilter() {
+                @Override
+                public boolean accept(File f) {
+                    return f.isDirectory();
+                }
+
+                @Override
+                public String getDescription() {
+                    return "Directories";
+                }
+            };
+            chooser.addChoosableFileFilter(filter);
+            chooser.setFileFilter(filter);
+            chooser.setAcceptAllFileFilterUsed(false);
+            chooser.setMultiSelectionEnabled(false);
+
+            chooser.setDialogTitle("Choose location");
+            if (chooser.showDialog(this, "Create") != JFileChooser.APPROVE_OPTION) return;
+
+            String mainClassName = JOptionPane.showInputDialog(this, "Enter a main class name, including package",
+                    "Create Script", JOptionPane.PLAIN_MESSAGE);
+            while (true) {
+                if (mainClassName == null) return;
+                String error = null;
+                nameCheck: for (String part : mainClassName.split("\\.")) {
+                    switch (part) {
+                        case "abstract":
+                        case "assert":
+                        case "boolean":
+                        case "break":
+                        case "byte":
+                        case "case":
+                        case "catch":
+                        case "char":
+                        case "class":
+                        case "const":
+                        case "continue":
+                        case "default":
+                        case "do":
+                        case "double":
+                        case "else":
+                        case "enum":
+                        case "extends":
+                        case "false":
+                        case "final":
+                        case "finally":
+                        case "float":
+                        case "for":
+                        case "goto":
+                        case "if":
+                        case "implements":
+                        case "import":
+                        case "instanceof":
+                        case "int":
+                        case "interface":
+                        case "long":
+                        case "native":
+                        case "new":
+                        case "null":
+                        case "package":
+                        case "private":
+                        case "protected":
+                        case "public":
+                        case "return":
+                        case "short":
+                        case "static":
+                        case "strictfp":
+                        case "super":
+                        case "switch":
+                        case "synchronized":
+                        case "this":
+                        case "throw":
+                        case "throws":
+                        case "transient":
+                        case "true":
+                        case "try":
+                        case "void":
+                        case "volatile":
+                        case "while":
+                            error = "Cannot use the keyword " + part;
+                            break nameCheck;
+                        case "":
+                            error = "Must not start or end with a period, and cannot contain two dots in a row";
+                            break nameCheck;
+                        default:
+                            if (!Character.isJavaIdentifierStart(part.charAt(0))) {
+                                error = "Parts must start with a letter, $, or _ (found " + part.charAt(0) + ")";
+                                break nameCheck;
+                            }
+                            for (int i = 1; i < part.length(); i++) {
+                                if (!Character.isJavaIdentifierPart(part.charAt(i))) {
+                                    error = "Parts may only contain letters, digits, $, or _ (found " + part.charAt(i)
+                                            + ")";
+                                    break nameCheck;
+                                }
+                            }
+                    }
+                }
+                if (error == null) break;
+                mainClassName = JOptionPane.showInputDialog(this, new String[] {
+                        "Enter a main class name, including package",
+                        "Invalid class name: " + error},
+                        "Create Script", JOptionPane.PLAIN_MESSAGE);
+            }
+
+            File dir = chooser.getSelectedFile();
+            if (!dir.exists() && !dir.mkdirs()) {
+                JOptionPane.showMessageDialog(this, "Failed to create project: Failed to create folder",
+                        "Create Project", JOptionPane.ERROR_MESSAGE);
+            }
+            ScriptStorage script = null;
+            try {
+                script = new ScriptStorage(dir, mainClassName);
+                if (!script.getMainFile().getParentFile().exists() && !script.getMainFile().getParentFile().mkdirs()) {
+                    JOptionPane.showMessageDialog(this, "Failed to create project: Failed to create package",
+                            "Create Project", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                try (FileWriter writer = new FileWriter(script.getMainFile())) {
+                    String shortName;
+                    int split = mainClassName.indexOf('.');
+                    if (split >= 0) {
+                        writer.write("package " + mainClassName.substring(0, split) + ";\n\n");
+                        shortName = mainClassName.substring(split + 1);
+                    } else {
+                        shortName = mainClassName;
+                    }
+                    writer.write("import " + Game.class.getPackage().getName() + ".*;\n\n" +
+                            "public final class " + shortName + " {\n" +
+                            "    /**\n" +
+                            "     * This method is called for every run through the game loop.\n" +
+                            "     * @param game The current game state.\n" +
+                            "     */\n" +
+                            "    public static void tick(Game game) {\n" +
+                            "        // Your code goes here. Good luck, and have fun!\n" +
+                            "    }\n" +
+                            "}\n");
+                    writer.flush();
+                }
+                scriptList.add(script);
+                saveScriptList(scriptList);
+
+                int index = scriptList.indexOf(script);
+                for (ListDataListener l : ((AbstractListModel<ScriptStorage>) list.getModel()).getListDataListeners()) {
+                    l.intervalAdded(new ListDataEvent(list.getModel(), ListDataEvent.INTERVAL_ADDED, index, index));
+                }
+                list.setSelectedValue(script, true);
+                revalidate();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Failed to create project: " + e1, "Create Project",
+                        JOptionPane.ERROR_MESSAGE);
+                if (script != null) {
+                    scriptList.remove(script);
+                }
+            }
         });
 
         JButton openInIde = new JButton("Open in IDE");
@@ -107,6 +239,8 @@ public final class ScriptSelectionComponent extends JPanel {
         toolbar.add(openInIde);
         add(toolbar, BorderLayout.SOUTH);
 
+        add(new JLabel("Double click a script to use it"), BorderLayout.NORTH);
+
         list.addListSelectionListener(e -> {
             if (list.getSelectedValue() == null) {
                 openInIde.setEnabled(false);
@@ -114,6 +248,51 @@ public final class ScriptSelectionComponent extends JPanel {
                 openInIde.setEnabled(true);
             }
         });
+    }
+
+    private Vector<ScriptStorage> loadScriptList() {
+        Vector<ScriptStorage> files = new Vector<>();
+        if (Files.isRegularFile(SCRIPT_LIST_FILE)) {
+            try {
+                Files.readAllLines(SCRIPT_LIST_FILE).stream().flatMap(line -> {
+                    try {
+                        return Arrays.stream(new ScriptStorage[] {new ScriptStorage(line)});
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return Arrays.stream(new ScriptStorage[0]);
+                    }
+                }).forEach(files::add);
+                Collections.sort(files);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (new File("RobotGameScript.java").exists()) {
+            File dir = new File("RobotGameScript");
+            if ((dir.isDirectory() || dir.mkdirs()) && new File("RobotGameScript.java")
+                    .renameTo(new File(dir, "src/RobotGameScript.java"))) {
+                try {
+                    files.add(new ScriptStorage(dir.getAbsolutePath() + " RobotGameScript"));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                System.err.println("Failed to import legacy script file");
+            }
+        }
+
+        try {
+            saveScriptList(files);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return files;
+    }
+
+    private static void saveScriptList(Vector<ScriptStorage> files) throws IOException {
+        Collections.sort(files);
+        Files.write(SCRIPT_LIST_FILE, files.stream().<CharSequence>map(ScriptStorage::toString)::iterator);
     }
 
     private void showIdeDialog(ScriptStorage script) {

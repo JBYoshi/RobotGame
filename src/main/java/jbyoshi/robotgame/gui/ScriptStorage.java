@@ -12,17 +12,21 @@ public final class ScriptStorage implements Comparable<ScriptStorage> {
     private final String mainClassName;
 
     ScriptStorage(String line) throws IOException {
-        int split = line.lastIndexOf(" ");
-        root = new File(line.substring(0, split));
-        if (!root.exists()) throw new FileNotFoundException();
+        this(new File(line.substring(0, line.lastIndexOf(' '))), line.substring(line.lastIndexOf(' ') + 1));
+    }
+
+    ScriptStorage(File root, String mainClassName) throws IOException {
+        this.root = root;
         srcDir = new File(root, "src");
 
-        mainClassName = line.substring(split + 1);
+        this.mainClassName = mainClassName;
+        if (!getMainFile().exists()) throw new FileNotFoundException(getMainFile().toString());
 
         if (GameJar.getGameJar() != null) {
             generateIdeFiles();
         } else {
-            System.out.println("Running from .class files, skipping IDE files. Use gradlew runShadow to test this.");
+            System.out.println("Running outside of JAR, cannot setup IDE projects.");
+            System.out.println("To test the creation of IDE projects, please use gradlew runShadow.");
         }
     }
 
@@ -79,7 +83,7 @@ public final class ScriptStorage implements Comparable<ScriptStorage> {
 
     @Override
     public String toString() {
-        return srcDir + " " + mainClassName;
+        return root + " " + mainClassName;
     }
 
     private static void listRecursive(File dir, List<File> out) {
