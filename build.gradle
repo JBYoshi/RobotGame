@@ -40,4 +40,8 @@ dependencies {
     compile 'com.google.code.gson:gson:2.6.1'
 }
 
+runShadow {
+    systemProperties["updater.skip"] = "true"
+}
+
 apply from: file('deploy.gradle')

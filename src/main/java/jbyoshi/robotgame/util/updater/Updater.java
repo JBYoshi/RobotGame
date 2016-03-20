@@ -6,6 +6,9 @@ import java.util.Optional;
 public abstract class Updater {
     public abstract Optional<Update> checkForUpdates() throws IOException;
     public static Updater getUpdater(String repoApiUrl) {
+        if (Boolean.getBoolean("updater.skip")) {
+            return DUMMY;
+        }
         try {
             return new UpdaterImpl(repoApiUrl);
         } catch (UpdaterImpl.NotSupportedException e) {
