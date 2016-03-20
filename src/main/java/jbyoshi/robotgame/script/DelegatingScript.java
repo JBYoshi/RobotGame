@@ -21,10 +21,6 @@ import jbyoshi.robotgame.api.Game;
 public class DelegatingScript implements Script {
     private Script currentScript;
 
-    public DelegatingScript(Script currentScript) {
-        this.currentScript = currentScript;
-    }
-
     public synchronized void setScript(Script currentScript) {
         this.currentScript = currentScript;
     }

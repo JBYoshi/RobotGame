@@ -109,7 +109,7 @@ final class GameDraw {
 			String timeLeft = String.format("%02d:%02d", ticksLeft / 60, ticksLeft % 60);
 
 			return new GameComponent.BufferLayer[] {component.createLayer(g -> {
-				g.setColor(new Color(75, 75, 75));
+				g.setColor(RGColors.DARK_GRAY);
 				g.fill(new Rectangle2D.Double(0, 0, component.getGameSize(), component.getGameSize()));
 				g.scale(component.getGridSpotSize(), component.getGridSpotSize());
 				g.setColor(new Color(40, 40, 40));

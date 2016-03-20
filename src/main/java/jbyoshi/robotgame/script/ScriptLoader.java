@@ -24,20 +24,21 @@ import java.util.List;
 
 import bsh.*;
 import jbyoshi.robotgame.api.*;
+import jbyoshi.robotgame.gui.ScriptStorage;
 import jbyoshi.robotgame.util.reflect.ReflectField;
 import jbyoshi.robotgame.util.reflect.ReflectMethod;
 
 public final class ScriptLoader {
-	public static Script loadScript(File mainFile, File... otherFiles) throws InvocationTargetException, IOException {
+	public static Script loadScript(ScriptStorage scriptStorage) throws InvocationTargetException, IOException {
 		Interpreter interpreter = new Interpreter();
 		NameSpace ns = new SecuredNameSpace(new SecuredBshClassManager(ScriptLoader.class.getClassLoader()), "global");
 		ns.loadDefaultImports();
 		interpreter.setNameSpace(ns);
 		try {
-			for (File file : otherFiles) {
+			for (File file : scriptStorage.getAuxiliaryFiles()) {
 				loadAndEvaluate(interpreter, ns, file);
 			}
-			Object main = loadAndEvaluate(interpreter, ns, mainFile);
+			Object main = loadAndEvaluate(interpreter, ns, scriptStorage.getMainFile());
 			if (main instanceof Class) {
 				Class<?> clazz = (Class<?>) main;
 				return loadScript(clazz);
