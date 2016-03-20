@@ -46,7 +46,7 @@ abstract class AttackableSprite<T extends AttackableModel> extends Sprite<T> {
 	protected abstract void drawAttackable(Graphics2D g, float renderTicks);
 
 	@Override
-	public void preTick() {
+	void preTick() {
 		super.preTick();
 		lastHealth = model.health;
 	}

@@ -19,5 +19,5 @@ package jbyoshi.robotgame.model;
 import jbyoshi.robotgame.impl.PlayerImpl;
 
 public interface OwnedModel {
-    public PlayerImpl getPlayer();
+    PlayerImpl getPlayer();
 }

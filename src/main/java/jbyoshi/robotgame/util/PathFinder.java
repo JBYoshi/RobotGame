@@ -20,7 +20,7 @@ import java.util.*;
 import java.util.function.Predicate;
 
 abstract class PathFinder<P> {
-    protected Optional<List<P>> search(P start, Predicate<P> end) {
+    Optional<List<P>> search(P start, Predicate<P> end) {
         Queue<PathNode> toCheck = new PriorityQueue<>();
         Map<P, PathNode> toCheckMap = new HashMap<>();
         toCheck.add(createPathNode(start, null, end));
@@ -93,7 +93,7 @@ abstract class PathFinder<P> {
 
     protected abstract PathNode createPathNode(P point, PathNode parent, Predicate<P> end);
 
-    protected class PathNode implements Comparable<PathNode> {
+    class PathNode implements Comparable<PathNode> {
         final P point;
         final PathNode parent;
         final int weight;

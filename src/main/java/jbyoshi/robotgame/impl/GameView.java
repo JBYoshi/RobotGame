@@ -27,7 +27,7 @@ import jbyoshi.robotgame.model.*;
 import jbyoshi.robotgame.util.*;
 
 public final class GameView implements Game {
-	final GameModel model;
+	private final GameModel model;
 	final PlayerImpl player;
 	private final Function<Model, ModelView<?>> views;
 	private final Set<BoundAction> actions = new LinkedHashSet<>();

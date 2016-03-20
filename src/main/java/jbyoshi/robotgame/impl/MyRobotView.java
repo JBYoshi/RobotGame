@@ -19,7 +19,6 @@ package jbyoshi.robotgame.impl;
 import jbyoshi.robotgame.action.*;
 import jbyoshi.robotgame.api.*;
 import jbyoshi.robotgame.model.*;
-import jbyoshi.robotgame.api.Direction;
 
 final class MyRobotView extends RobotView implements MyRobot {
 	private Path cachedPath;

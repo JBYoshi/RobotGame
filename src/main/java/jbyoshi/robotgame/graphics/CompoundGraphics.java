@@ -21,15 +21,14 @@ import java.awt.image.ColorModel;
 import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
 
-public class CompoundGraphics extends ProxyGraphics {
+final class CompoundGraphics extends ProxyGraphics {
     private Composite extraComposite = null;
     private final Graphics2D parent;
-    private final CompoundComposite compoundComposite = new CompoundComposite();
-    
-    public CompoundGraphics(Graphics2D parent) {
+
+    CompoundGraphics(Graphics2D parent) {
         super((Graphics2D) parent.create());
         this.parent = parent;
-        delegate.setComposite(compoundComposite);
+        delegate.setComposite(new CompoundComposite());
     }
 
     @Override

@@ -22,11 +22,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
-public class ResourceClassLoader extends ClassLoader {
-	public ResourceClassLoader() {
+class ResourceClassLoader extends ClassLoader {
+	ResourceClassLoader() {
 	}
 
-	public ResourceClassLoader(ClassLoader parent) {
+	ResourceClassLoader(ClassLoader parent) {
 		super(parent);
 	}
 
@@ -54,12 +54,8 @@ public class ResourceClassLoader extends ClassLoader {
 		} catch (IOException e) {
 			throw new ClassNotFoundException(name, e);
 		}
-		byte[] transformed = transformClass(name, out.toByteArray());
-		return defineClass(name, transformed, 0, transformed.length);
-	}
-
-	protected byte[] transformClass(String name, byte[] classBytes) {
-		return classBytes;
+		byte[] classBytes = out.toByteArray();
+		return defineClass(name, classBytes, 0, classBytes.length);
 	}
 
 	static {

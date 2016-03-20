@@ -71,7 +71,7 @@ public final class ScriptLoader {
 		return interpreter.eval(new StringReader(contents), ns, file.getName());
 	}
 
-	public static Script loadScript(Class<?> clazz) throws InvocationTargetException {
+	private static Script loadScript(Class<?> clazz) throws InvocationTargetException {
 		try {
 			Method tick = clazz.getDeclaredMethod("tick", Game.class);
 			if (!Modifier.isPublic(tick.getModifiers())) {

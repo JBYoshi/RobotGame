@@ -4,7 +4,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
@@ -12,7 +11,7 @@ public final class Update {
     private final URL url;
     private final File destFile;
 
-    Update(URL downloadUrl, File destFile) throws IOException {
+    Update(URL downloadUrl, File destFile) {
         this.url = downloadUrl;
         this.destFile = destFile;
     }

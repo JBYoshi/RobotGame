@@ -25,7 +25,7 @@ public abstract class Model implements Cloneable {
 	GameModel game;
 	public Point loc;
 
-	protected Model(Point loc) {
+	Model(Point loc) {
 		this.loc = loc;
 	}
 
@@ -33,7 +33,7 @@ public abstract class Model implements Cloneable {
 		return this.game;
 	}
 
-	public void setId(UUID id) {
+	void setId(UUID id) {
 		this.id = id;
 	}
 

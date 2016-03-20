@@ -28,10 +28,10 @@ import java.awt.image.renderable.RenderableImage;
 import java.text.AttributedCharacterIterator;
 import java.util.Map;
 
-public abstract class ProxyGraphics extends Graphics2D {
-    protected final Graphics2D delegate;
+abstract class ProxyGraphics extends Graphics2D {
+    final Graphics2D delegate;
     
-    public ProxyGraphics(Graphics2D delegate) {
+    ProxyGraphics(Graphics2D delegate) {
         this.delegate = delegate;
     }
 

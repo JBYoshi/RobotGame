@@ -78,8 +78,10 @@ abstract class Sprite<T extends Model> {
 
 	static Composite createShadeComposite(Color shade) {
 		return (srcColorModel, dstColorModel, hints) -> new CompositeContext() {
-			CompositeContext srcOverSrcSrc = AlphaComposite.SrcOver.createContext(srcColorModel, srcColorModel, hints);
-			CompositeContext srcOverSrcDst = AlphaComposite.SrcOver.createContext(srcColorModel, dstColorModel, hints);
+			final CompositeContext srcOverSrcSrc = AlphaComposite.SrcOver.createContext(srcColorModel, srcColorModel,
+					hints);
+			final CompositeContext srcOverSrcDst = AlphaComposite.SrcOver.createContext(srcColorModel, dstColorModel,
+					hints);
 
 			@Override
 			public void dispose() {

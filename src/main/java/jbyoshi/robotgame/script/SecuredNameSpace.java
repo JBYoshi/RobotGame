@@ -29,14 +29,6 @@ final class SecuredNameSpace extends NameSpace {
 		super(classManager, name);
 	}
 
-	SecuredNameSpace(NameSpace parent, SecuredBshClassManager classManager, String name) {
-		super(parent, classManager, name);
-	}
-
-	SecuredNameSpace(NameSpace parent, String name) {
-		super(parent, name);
-	}
-
 	@Override
 	public void doSuperImport() {
 		throw new SecurityException("Super imports are not allowed!");

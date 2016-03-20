@@ -20,7 +20,7 @@ import jbyoshi.robotgame.api.Point;
 
 public abstract class AttackableModel extends Model {
     public int health;
-    protected AttackableModel(Point loc, int maxHealth) {
+    AttackableModel(Point loc, int maxHealth) {
         super(loc);
         this.health = maxHealth;
     }

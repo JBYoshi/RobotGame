@@ -43,9 +43,7 @@ public final class GameModel {
 	public GameModel(GameModel other) {
 		map = new boolean[other.map.length][other.map[0].length];
 		for (int x = 0; x < map.length; x++) {
-			for (int y = 0; y < map[0].length; y++) {
-				map[x][y] = other.map[x][y];
-			}
+			System.arraycopy(other.map[x], 0, map[x], 0, map[0].length);
 		}
 
 		other.modelsById.values().stream().map(Model::clone).forEach(this::add);

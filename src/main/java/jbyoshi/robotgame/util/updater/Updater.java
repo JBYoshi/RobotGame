@@ -16,7 +16,7 @@ public abstract class Updater {
         }
     }
 
-    public static final Updater DUMMY = new Updater() {
+    private static final Updater DUMMY = new Updater() {
         @Override
         public Optional<Update> checkForUpdates() {
             return Optional.empty();

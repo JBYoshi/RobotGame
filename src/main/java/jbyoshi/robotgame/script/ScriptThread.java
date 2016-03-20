@@ -68,7 +68,7 @@ public class ScriptThread extends Thread implements PlayerConnection {
         }
     }
 
-    protected Set<BoundAction> tick() {
+    private Set<BoundAction> tick() {
         model.preTick();
         try {
             GameView view = new GameView(model, player);

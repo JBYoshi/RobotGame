@@ -19,7 +19,7 @@ package jbyoshi.robotgame;
 import java.io.File;
 import java.net.*;
 
-public final class BootstrapClassLoader extends ClassLoader {
+final class BootstrapClassLoader extends ClassLoader {
 	@Override
 	protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
 		final String classFile = name.replace('.', '/') + ".class";
