@@ -14,8 +14,7 @@ version = 'dev'
 
 license {
     header file('gradle/HEADER.txt')
-    include 'src/**/*'
-    exclude 'src/*/resources/**/*'
+    include '**/*.java'
 
     ignoreFailures false
     strictCheck true
