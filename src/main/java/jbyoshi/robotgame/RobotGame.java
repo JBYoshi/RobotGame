@@ -150,12 +150,12 @@ public final class RobotGame {
             List<PlayerImpl> currentPlayers = new ArrayList<>(numPlayersPerGame);
             for (int playerNum = 0; playerNum < numPlayersPerGame; playerNum++) {
                 int random = (int) (Math.random() * (allPlayers.length - playerNum));
-                int i = 0;
+                int i = -1;
                 do {
+					i++;
                     while (currentPlayers.contains(allPlayers[i])) i++;
                     random--;
                 } while (random >= 0);
-                assert !currentPlayers.contains(allPlayers[i]);
                 currentPlayers.add(allPlayers[i]);
             }
 
@@ -165,7 +165,7 @@ public final class RobotGame {
             serverModel.add(new SpawnerModel(currentPlayers.get(2), new Point(Game.WORLD_SIZE / 4, Game.WORLD_SIZE * 3 / 4)));
             serverModel.add(new SpawnerModel(currentPlayers.get(3), new Point(Game.WORLD_SIZE * 3 / 4, Game.WORLD_SIZE * 3 / 4)));
 
-            reloadScript(frame);
+            reloadScript();
 
             final List<ScriptThread> scriptThreads = currentPlayers.stream().map(new Function<PlayerImpl, ScriptThread>() {
                 private boolean firstScript = true;
@@ -205,7 +205,7 @@ public final class RobotGame {
 		buttonPanel.add(edit);
 
 		JButton update = new JButton("Reload Script");
-		update.addActionListener(event -> reloadScript(frame));
+		update.addActionListener(event -> reloadScript());
 		buttonPanel.add(update);
 
 		frame.getContentPane().add(buttonPanel, BorderLayout.SOUTH);
@@ -216,7 +216,7 @@ public final class RobotGame {
 		JDialog dialog = new JDialog(frame, "Select Script", true);
 		dialog.getContentPane().add(new ScriptSelectionComponent(scriptStorage -> {
 			selectedScript = scriptStorage;
-			reloadScript(frame);
+			reloadScript();
 			dialog.setVisible(false);
 		}));
 		dialog.pack();
@@ -233,24 +233,8 @@ public final class RobotGame {
 		dialog.setVisible(true);
 	}
 
-	private static void reloadScript(JFrame frame) {
+	private static void reloadScript() {
 		try {
-			/*
-			if (!scriptFile.exists()) {
-				try (FileWriter writer = new FileWriter(scriptFile)) {
-					writer.write("public class RobotGameScript {\n\tpublic static void tick(Game game) {\n\t\t// Your code goes here\n\t}\n}".replace("\n", System.lineSeparator()));
-					writer.flush();
-				}
-				if (JOptionPane.showConfirmDialog(frame, new String[]{
-						"To use this game, you will need to write some code for it.",
-						"This code should be put in the file in your current working directory named RobotGameScript.java.",
-						"Be aware that it may not support some newer Java language features, such as lambdas.",
-						"Would you like to open the script file for editing?"
-				}, "Script Not Found", JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE) == JOptionPane.YES_OPTION) {
-					openEditor();
-				}
-			}
-			*/
 			script.setScript(ScriptLoader.loadScript(selectedScript));
 		} catch (InvocationTargetException e) {
 			e.getTargetException().printStackTrace();
