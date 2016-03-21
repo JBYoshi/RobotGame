@@ -7,5 +7,6 @@
 /*.iws
 /.gradle/
 /build/
+/bin/
 
 RobotGameScript

@@ -16,7 +16,6 @@
  */
 package jbyoshi.robotgame.gui;
 
-import jbyoshi.robotgame.RobotGame;
 import jbyoshi.robotgame.idetemplates.IdeProjectGenerator;
 import jbyoshi.robotgame.util.GameJar;
 

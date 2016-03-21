@@ -117,11 +117,8 @@ public final class GameView implements Game {
 		model.getAllModels().stream().map(views).filter(type::isInstance).map(type::cast)
 				.filter(acceptTarget).forEach(view -> objects.put(view.getLocation(), view));
 
-		if (objects.isEmpty()) {
-			// Optimize using... no algorithm?
-			return Optional.empty();
-		}
-
+		if (objects.isEmpty()) return Optional.empty();
+		if (objects.containsKey(start)) return Optional.of(objects.get(start));
 		if (objects.size() == 1) {
 			// Optimize using astar.
 			return Optional.of(objects.values().iterator().next()).filter(x -> createPath(start, x.getLocation(),
