@@ -135,7 +135,7 @@ class GHRefUpdate {
 }
 
 task deploy {
-    dependsOn 'clean', 'shadowJar', 'build'
+    dependsOn 'check', 'shadowJar'
 
     doLast {
         GHRepo repo = GitHub.com.repo(repoId)
