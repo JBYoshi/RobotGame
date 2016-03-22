@@ -174,7 +174,9 @@ task deploy {
             while (Character.isDigit(release.body.charAt(versionLogIdEnd))) versionLogIdEnd++
             if (versionLogIdEnd > versionLogIdStart) {
                 repo.getIssue(Integer.parseInt(release.body.substring(versionLogIdStart, versionLogIdEnd)))
-                        .comment("Update published: $sha\n\nYour game should automaticaly update.")
+                        .comment("Update published: $sha Your game should automaticaly update.\n\n" +
+                        "<small>This is an automated message. https://github.com/JBYoshi/RobotGame" +
+                        "/blob/$tag/deploy.gradle</small>")
             }
         }
 
