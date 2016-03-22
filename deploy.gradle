@@ -62,6 +62,7 @@ class Http {
 
     static def <T> T get(String url, Class<T> outputType) { request(url, "GET", null, outputType) }
     static void post(String url, Map<String, String> headers, InputStream is) { requestRaw(url, "POST", is, headers) }
+    static void post(String url, Object data) { request(url, "POST", gson.toJson(data), null) }
     static def <T> T patch(String url, Object data, Class<T> outputType) {
         // GitHub custom method, need to add it to HttpURLConnection
         def validMethods = HttpURLConnection.getDeclaredField("methods")
@@ -100,6 +101,7 @@ class GitHub {
 }
 class GHRepo {
     String releases_url
+    String issues_url
     String git_refs_url
     String default_branch
     GHRelease getReleaseByTag(String tag) {
@@ -108,8 +110,12 @@ class GHRepo {
     void setRef(String name, GHRefUpdate update) {
         Http.patch(git_refs_url.replace("{/sha}", "/$name"), update, null)
     }
+    GHIssue getIssue(int id) {
+        Http.get(issues_url.replace("{/number}", "/$id"), GHIssue)
+    }
 }
 class GHRelease {
+    String body
     String upload_url
     GHReleaseAsset[] assets
     void addFile(File src, String mimeType) {
@@ -133,6 +139,17 @@ class GHRefUpdate {
         this.force = force
     }
 }
+class GHIssue {
+    String comments_url
+    void comment(String text) {
+        def comment = new GHCommentUpload()
+        comment.body = text
+        Http.post(comments_url, comment)
+    }
+}
+class GHCommentUpload {
+    String body
+}
 
 task deploy {
     dependsOn 'check', 'shadowJar'
@@ -150,6 +167,17 @@ task deploy {
         release.assets.each {it.delete()}
         release.addFile(shadowJar.archivePath, "application/java-archive")
         repo.setRef("tags/$tag", new GHRefUpdate(sha, true))
+
+        def versionLogIdStart = release.body.indexOf('#') + 1
+        if (versionLogIdStart >= 0) {
+            def versionLogIdEnd = versionLogIdStart
+            while (Character.isDigit(release.body.charAt(versionLogIdEnd))) versionLogIdEnd++
+            if (versionLogIdEnd > versionLogIdStart) {
+                repo.getIssue(Integer.parseInt(release.body.substring(versionLogIdStart, versionLogIdEnd)))
+                        .comment("Update published: $sha\n\nYour game should automaticaly update.")
+            }
+        }
+
     }
 }
 
