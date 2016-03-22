@@ -28,4 +28,14 @@ class SpawnerView extends ModelView<SpawnerModel> implements Spawner {
 	public int getTimeUntilSpawn() {
 		return model.countdown;
 	}
+
+	@Override
+	public int getHealth() {
+		return model.health;
+	}
+
+	@Override
+	public int getMaxHealth() {
+		return model.maxHealth;
+	}
 }

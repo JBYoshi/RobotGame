@@ -17,4 +17,7 @@
 package jbyoshi.robotgame.api;
 
 public interface Attackable {
+    int getHealth();
+
+    int getMaxHealth();
 }

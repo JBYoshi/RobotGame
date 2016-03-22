@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 public final class ServerThread implements Runnable {
     private final List<? extends PlayerConnection> scripts;
-    public final GameModel game;
+    private final GameModel game;
 
     public ServerThread(List<? extends PlayerConnection> scripts) {
         this.scripts = scripts;

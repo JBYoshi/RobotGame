@@ -23,4 +23,14 @@ class RobotView extends ModelView<RobotModel> implements Robot {
 	RobotView(GameView game, RobotModel model) {
 		super(game, model);
 	}
+
+	@Override
+	public int getHealth() {
+		return model.health;
+	}
+
+	@Override
+	public int getMaxHealth() {
+		return model.maxHealth;
+	}
 }
