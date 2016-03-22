@@ -51,9 +51,4 @@ public final class ReflectMethod<T, V> {
             throw Throwables.propagate(e);
         }
     }
-
-    @SuppressWarnings("unchecked")
-    public Class<? extends V> getReturnType() {
-        return (Class<? extends V>) m.getReturnType();
-    }
 }
