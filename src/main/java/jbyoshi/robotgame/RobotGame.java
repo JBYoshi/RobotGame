@@ -130,6 +130,13 @@ public final class RobotGame {
 			e.printStackTrace();
 		}
 
+		if (!ScriptLoader.isJavacEnabled()) {
+			JOptionPane.showMessageDialog(frame, new String[] {"Looks like the game isn't running on a JDK.",
+					"Using a JDK will allow you to use newer Java language syntax features, such as lambdas.",
+					"Without a JDK, your code will be limited to Java 5's syntax."}, "No JDK detected!",
+					JOptionPane.WARNING_MESSAGE);
+		}
+
 		selectScript(frame);
 
 		new Thread(() -> gameLoop(frame, updater), "Game Loop").start();
@@ -164,8 +171,6 @@ public final class RobotGame {
             serverModel.add(new SpawnerModel(currentPlayers.get(1), new Point(Game.WORLD_SIZE * 3 / 4, Game.WORLD_SIZE / 4)));
             serverModel.add(new SpawnerModel(currentPlayers.get(2), new Point(Game.WORLD_SIZE / 4, Game.WORLD_SIZE * 3 / 4)));
             serverModel.add(new SpawnerModel(currentPlayers.get(3), new Point(Game.WORLD_SIZE * 3 / 4, Game.WORLD_SIZE * 3 / 4)));
-
-            reloadScript();
 
             final List<ScriptThread> scriptThreads = currentPlayers.stream().map(new Function<PlayerImpl, ScriptThread>() {
                 private boolean firstScript = true;
@@ -205,7 +210,7 @@ public final class RobotGame {
 		buttonPanel.add(edit);
 
 		JButton update = new JButton("Reload Script");
-		update.addActionListener(event -> reloadScript());
+		update.addActionListener(event -> reloadScript(frame));
 		buttonPanel.add(update);
 
 		frame.getContentPane().add(buttonPanel, BorderLayout.SOUTH);
@@ -216,8 +221,7 @@ public final class RobotGame {
 		JDialog dialog = new JDialog(frame, "Select Script", true);
 		dialog.getContentPane().add(new ScriptSelectionComponent(scriptStorage -> {
 			selectedScript = scriptStorage;
-			reloadScript();
-			dialog.setVisible(false);
+			if (reloadScript(frame)) dialog.setVisible(false);
 		}));
 		dialog.pack();
 		if (selectedScript == null) {
@@ -233,16 +237,26 @@ public final class RobotGame {
 		dialog.setVisible(true);
 	}
 
-	private static void reloadScript() {
+	private static boolean reloadScript(JFrame frame) {
+		String message;
 		try {
 			script.setScript(ScriptLoader.loadScript(selectedScript));
-		} catch (InvocationTargetException e) {
-			e.getTargetException().printStackTrace();
-			System.exit(1);
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(1);
+			return true;
+		} catch (CompilationException e) {
+			message = e.getMessage();
+		} catch (InvocationTargetException | IOException e) {
+			StringWriter writer = new StringWriter();
+			if (e instanceof InvocationTargetException) {
+				((InvocationTargetException) e).getTargetException().printStackTrace(new PrintWriter(writer));
+			} else {
+				e.printStackTrace(new PrintWriter(writer));
+			}
+			message = writer.toString();
 		}
+		System.err.println(message);
+		JOptionPane.showMessageDialog(frame, message.split(System.lineSeparator()), "Error",
+				JOptionPane.ERROR_MESSAGE);
+		return false;
 	}
 
 	@SuppressWarnings("unused")

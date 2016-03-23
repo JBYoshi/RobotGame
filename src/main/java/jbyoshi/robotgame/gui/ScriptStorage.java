@@ -46,7 +46,7 @@ public final class ScriptStorage implements Comparable<ScriptStorage> {
         }
     }
 
-    String getMainClassName() {
+    public String getMainClassName() {
         return mainClassName;
     }
 
@@ -90,5 +90,9 @@ public final class ScriptStorage implements Comparable<ScriptStorage> {
     @Override
     public int compareTo(ScriptStorage o) {
         return this.mainClassName.compareTo(o.mainClassName);
+    }
+
+    public File getSourceDir() {
+        return srcDir;
     }
 }
