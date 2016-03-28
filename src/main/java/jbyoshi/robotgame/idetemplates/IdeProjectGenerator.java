@@ -19,35 +19,43 @@ package jbyoshi.robotgame.idetemplates;
 import jbyoshi.robotgame.util.GameJar;
 
 import java.io.*;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public final class IdeProjectGenerator {
-    public static void generateIdeFiles(File dir) throws IOException {
+    public static void generateIdePaths(Path dir) throws IOException {
         // Eclipse
-        generateIdeFile(dir, ".project");
-        generateIdeFile(dir, ".classpath");
-        File eclipseSettings = new File(dir, ".settings");
-        if (!eclipseSettings.exists() && !eclipseSettings.mkdir()) throw new IOException("Could not create .settings/");
-        generateIdeFile(dir, ".settings/org.eclipse.jdt.core.prefs");
+        generateIdePath(dir, ".project");
+        generateIdePath(dir, ".classpath");
+        Path eclipseSettings = dir.resolve(".settings");
+        try {
+            Files.createDirectory(eclipseSettings);
+        } catch (FileAlreadyExistsException e) {
+            // Ignore
+        }
+        generateIdePath(dir, ".settings/org.eclipse.jdt.core.prefs");
 
         // IntelliJ
-        generateIdeFile(dir, "$PROJECT_NAME$.ipr");
-        generateIdeFile(dir, "$PROJECT_NAME$.iml");
-        generateIdeFile(dir, "$PROJECT_NAME$.iws");
+        generateIdePath(dir, "$PROJECT_NAME$.ipr");
+        generateIdePath(dir, "$PROJECT_NAME$.iml");
+        generateIdePath(dir, "$PROJECT_NAME$.iws");
     }
 
-    private static void generateIdeFile(File dir, String name) throws IOException {
+    private static void generateIdePath(Path dir, String name) throws IOException {
         StringBuilder data = new StringBuilder();
         try (BufferedReader in = new BufferedReader(new InputStreamReader(
                 IdeProjectGenerator.class.getResourceAsStream(name)))) {
             String line;
             while ((line = in.readLine()) != null) {
-                line = line.replace("$PROJECT_NAME$", xmlEscape(dir.getName()));
+                line = line.replace("$PROJECT_NAME$", xmlEscape(dir.getFileName().toString()));
                 line = line.replace("$GAME$", xmlEscape(GameJar.getGameJar().getAbsolutePath()
                         .replace(File.separatorChar, '/')));
                 data.append(line).append("\n");
             }
         }
-        try (FileWriter out = new FileWriter(new File(dir, name.replace("$PROJECT_NAME$", dir.getName())))) {
+        try (Writer out = Files.newBufferedWriter(dir.resolve(
+                name.replace("$PROJECT_NAME$",dir.getFileName().toString())))) {
             out.write(data.toString());
             out.flush();
         }

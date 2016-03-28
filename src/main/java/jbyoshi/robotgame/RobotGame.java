@@ -310,7 +310,7 @@ public final class RobotGame {
 
 	private static void openEditor() throws IOException {
 		if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
-			Desktop.getDesktop().open(selectedScript.getRootDir());
+			Desktop.getDesktop().open(selectedScript.getRootDir().toFile());
 		} else {
 			throw new IOException("Your system doesn't seem to support opening files.");
 		}

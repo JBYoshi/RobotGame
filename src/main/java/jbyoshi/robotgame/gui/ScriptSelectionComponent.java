@@ -27,8 +27,9 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -85,7 +86,7 @@ public final class ScriptSelectionComponent extends JPanel {
         add(new JScrollPane(list));
 
         JButton createNew = new JButton("Create");
-        createNew.addActionListener(e -> {
+        createNew.addActionListener(event -> {
             JFileChooser chooser = new JFileChooser();
             chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             FileFilter filter = new FileFilter() {
@@ -193,20 +194,25 @@ public final class ScriptSelectionComponent extends JPanel {
                         "Create Script", JOptionPane.PLAIN_MESSAGE);
             }
 
-            File dir = chooser.getSelectedFile();
-            if (!dir.exists() && !dir.mkdirs()) {
-                JOptionPane.showMessageDialog(this, "Failed to create project: Failed to create folder",
-                        "Create Project", JOptionPane.ERROR_MESSAGE);
+            Path dir = chooser.getSelectedFile().toPath();
+            if (!Files.isDirectory(dir)) {
+                try {
+                    Files.createDirectories(dir);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(this, "Failed to create project: Failed to create folder",
+                            "Create Project", JOptionPane.ERROR_MESSAGE);
+                }
             }
             ScriptStorage script = null;
             try {
                 script = new ScriptStorage(dir, mainClassName);
-                if (!script.getMainFile().getParentFile().exists() && !script.getMainFile().getParentFile().mkdirs()) {
-                    JOptionPane.showMessageDialog(this, "Failed to create project: Failed to create package",
-                            "Create Project", JOptionPane.ERROR_MESSAGE);
-                    return;
+                try {
+                    Files.createDirectories(script.getMainFile().getParent());
+                } catch (FileAlreadyExistsException e) {
+                    // Ignore
                 }
-                try (FileWriter writer = new FileWriter(script.getMainFile())) {
+                try (Writer writer = Files.newBufferedWriter(script.getMainFile())) {
                     String shortName;
                     int split = mainClassName.indexOf('.');
                     if (split >= 0) {
@@ -284,17 +290,21 @@ public final class ScriptSelectionComponent extends JPanel {
             }
         }
 
-        if (new File("RobotGameScript.java").exists()) {
-            File dir = new File("RobotGameScript");
-            if ((dir.isDirectory() || dir.mkdirs()) && new File("RobotGameScript.java")
-                    .renameTo(new File(dir, "src/RobotGameScript.java"))) {
+        Path oldScript = Paths.get("RobotGameScript.java");
+        if (Files.isReadable(oldScript)) {
+            Path scriptDir = Paths.get("RobotGameScript");
+            if (!Files.isDirectory(scriptDir)) {
+                Path sourceDir = scriptDir.resolve("src");
                 try {
-                    files.add(new ScriptStorage(dir.getAbsolutePath() + " RobotGameScript"));
+                    Files.createDirectories(sourceDir);
+                    Files.move(oldScript, sourceDir.resolve(oldScript.getFileName().toString()));
+                    files.add(new ScriptStorage(scriptDir, "RobotGameScript"));
                 } catch (IOException e) {
+                    System.err.println("Failed to import legacy script file: ");
                     e.printStackTrace();
                 }
             } else {
-                System.err.println("Failed to import legacy script file");
+                System.err.println("Failed to import legacy script file: Target project already exists");
             }
         }
 
@@ -312,9 +322,9 @@ public final class ScriptSelectionComponent extends JPanel {
     }
 
     private void showIdeDialog(ScriptStorage script) {
-        JTextField eclipseDirTextField = new JTextField(script.getRootDir().getAbsolutePath());
+        JTextField eclipseDirTextField = new JTextField(script.getRootDir().toAbsolutePath().toString());
         eclipseDirTextField.setEditable(false);
-        JTextField intellijDirTextField = new JTextField(script.getRootDir().getAbsolutePath());
+        JTextField intellijDirTextField = new JTextField(script.getRootDir().toAbsolutePath().toString());
         intellijDirTextField.setEditable(false);
         JOptionPane.showMessageDialog(this, new Object[] {
                 "To open in Eclipse:",

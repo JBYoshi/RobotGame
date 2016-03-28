@@ -19,27 +19,29 @@ package jbyoshi.robotgame.gui;
 import jbyoshi.robotgame.idetemplates.IdeProjectGenerator;
 import jbyoshi.robotgame.util.GameJar;
 
-import java.io.*;
+import java.io.IOException;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.LinkedList;
 import java.util.List;
 
 public final class ScriptStorage implements Comparable<ScriptStorage> {
-    private final File root, srcDir;
+    private final Path root, srcDir;
     private final String mainClassName;
 
     ScriptStorage(String line) throws IOException {
-        this(new File(line.substring(0, line.lastIndexOf(' '))), line.substring(line.lastIndexOf(' ') + 1));
+        this(Paths.get(line.substring(0, line.lastIndexOf(' '))), line.substring(line.lastIndexOf(' ') + 1));
     }
 
-    ScriptStorage(File root, String mainClassName) throws IOException {
+    ScriptStorage(Path root, String mainClassName) throws IOException {
         this.root = root;
-        srcDir = new File(root, "src");
+        srcDir = root.resolve("src");
 
         this.mainClassName = mainClassName;
-        if (!getMainFile().exists()) throw new FileNotFoundException(getMainFile().toString());
+        if (!Files.isRegularFile(getMainFile())) throw new NoSuchFileException(getMainFile().toString());
 
         if (GameJar.getGameJar() != null) {
-            IdeProjectGenerator.generateIdeFiles(root);
+            IdeProjectGenerator.generateIdePaths(root);
         } else {
             System.out.println("Running outside of JAR, cannot setup IDE projects.");
             System.out.println("To test the creation of IDE projects, please use gradlew runShadow.");
@@ -50,18 +52,24 @@ public final class ScriptStorage implements Comparable<ScriptStorage> {
         return mainClassName;
     }
 
-    public File getRootDir() {
+    public Path getRootDir() {
         return root;
     }
 
-    public File getMainFile() {
-        return new File(srcDir, mainClassName.replace('.', '/') + ".java");
+    public Path getMainFile() {
+        return srcDir.resolve(mainClassName.replace('.', '/') + ".java");
     }
 
-    public List<File> getAuxiliaryFiles() {
-        List<File> files = new LinkedList<>();
-        listRecursive(srcDir, files);
-        files.remove(new File(srcDir, mainClassName.replace('.', File.separatorChar) + ".java"));
+    public List<Path> getAuxiliaryFiles() throws IOException {
+        List<Path> files = new LinkedList<>();
+        Files.walkFileTree(srcDir, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                files.add(file);
+                return FileVisitResult.CONTINUE;
+            }
+        });
+        files.remove(getMainFile());
         return files;
     }
 
@@ -70,29 +78,12 @@ public final class ScriptStorage implements Comparable<ScriptStorage> {
         return root + " " + mainClassName;
     }
 
-    private static void listRecursive(File dir, List<File> out) {
-        File[] children = dir.listFiles();
-        if (children == null) {
-            if (dir.exists()) {
-                out.add(dir);
-            }
-        } else {
-            for (File f : children) {
-                if (f.isDirectory()) {
-                    listRecursive(f, out);
-                } else {
-                    out.add(f);
-                }
-            }
-        }
-    }
-
     @Override
     public int compareTo(ScriptStorage o) {
         return this.mainClassName.compareTo(o.mainClassName);
     }
 
-    public File getSourceDir() {
+    public Path getSourceDir() {
         return srcDir;
     }
 }

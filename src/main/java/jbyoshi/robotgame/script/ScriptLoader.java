@@ -20,13 +20,12 @@ import java.io.*;
 import java.lang.reflect.*;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.Files;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import bsh.*;
-import jbyoshi.robotgame.api.*;
+import jbyoshi.robotgame.api.Game;
 import jbyoshi.robotgame.gui.ScriptStorage;
 import jbyoshi.robotgame.util.GameJar;
 import jbyoshi.robotgame.util.reflect.ReflectField;
@@ -60,16 +59,15 @@ public final class ScriptLoader {
 
 	private static Script loadJavacScript(ScriptStorage scriptStorage, File javac) throws IOException,
 			CompilationException, InvocationTargetException {
-		File outDir = new File(System.getProperty("java.io.tmpdir"), "RobotGame-script-out-"
-				+ scriptStorage.getRootDir().getName() + "-" + UUID.randomUUID());
-		if (!outDir.mkdirs()) throw new IOException("Failed to create class file output directory");
+		Path outDir = Files.createTempDirectory("RobotGame-script-out-"
+				+ scriptStorage.getRootDir().getFileName().toString());
 		Process p = new ProcessBuilder().command(javac.getAbsolutePath(),
 				"-cp", GameJar.getGameLocation().getAbsolutePath(),
-				"-d", outDir.getAbsolutePath(),
-				"-sourcepath", scriptStorage.getSourceDir().getAbsolutePath(),
+				"-d", outDir.toAbsolutePath().toString(),
+				"-sourcepath", scriptStorage.getSourceDir().toAbsolutePath().toString(),
 				"-source", "1.8",
 				"-target", "1.8",
-				scriptStorage.getMainFile().getAbsolutePath()).start();
+				scriptStorage.getMainFile().toAbsolutePath().toString()).start();
 		int result;
 		try {
 			result = p.waitFor();
@@ -79,14 +77,14 @@ public final class ScriptLoader {
 			throw ioe;
 		}
 		if (result == 0) {
-			URLClassLoader loader = new URLClassLoader(new URL[] {outDir.toURI().toURL()},
+			URLClassLoader loader = new URLClassLoader(new URL[] {outDir.toUri().toURL()},
 					ScriptLoader.class.getClassLoader());
 			try {
 				return loadScript(loader.loadClass(scriptStorage.getMainClassName()));
 			} catch (ClassNotFoundException e) {
-				FileNotFoundException fnfe = new FileNotFoundException(e.toString());
-				fnfe.initCause(e);
-				throw fnfe;
+				NoSuchFileException nsfe = new NoSuchFileException(e.toString());
+				nsfe.initCause(e);
+				throw nsfe;
 			}
 		}
 
@@ -107,7 +105,7 @@ public final class ScriptLoader {
 		ns.loadDefaultImports();
 		interpreter.setNameSpace(ns);
 		try {
-			for (File file : scriptStorage.getAuxiliaryFiles()) {
+			for (Path file : scriptStorage.getAuxiliaryFiles()) {
 				loadAndEvaluate(interpreter, ns, file);
 			}
 			Object main = loadAndEvaluate(interpreter, ns, scriptStorage.getMainFile());
@@ -139,9 +137,9 @@ public final class ScriptLoader {
 		}
 	}
 
-	private static Object loadAndEvaluate(Interpreter interpreter, NameSpace ns, File file) throws IOException, EvalError {
-		String contents = String.join(System.lineSeparator(), Files.readAllLines(file.toPath()));
-		return interpreter.eval(new StringReader(contents), ns, file.getName());
+	private static Object loadAndEvaluate(Interpreter interpreter, NameSpace ns, Path file) throws IOException, EvalError {
+		String contents = String.join(System.lineSeparator(), Files.readAllLines(file));
+		return interpreter.eval(new StringReader(contents), ns, file.getFileName().toString());
 	}
 
 	private static Script loadScript(Class<?> clazz) throws InvocationTargetException {
