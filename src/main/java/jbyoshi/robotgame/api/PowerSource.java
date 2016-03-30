@@ -14,33 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package jbyoshi.robotgame.impl;
+package jbyoshi.robotgame.api;
 
-import jbyoshi.robotgame.api.*;
-import jbyoshi.robotgame.model.*;
-
-class RobotView extends ModelView<RobotModel> implements Robot {
-	RobotView(GameView game, RobotModel model) {
-		super(game, model);
-	}
-
-	@Override
-	public int getHealth() {
-		return model.health;
-	}
-
-	@Override
-	public int getMaxHealth() {
-		return model.maxHealth;
-	}
-
-	@Override
-	public int getStoredPower() {
-		return model.power;
-	}
-
-	@Override
-	public int getMaximumPower() {
-		return RobotModel.MAX_POWER;
-	}
+public interface PowerSource extends ObjectInGame, Attackable {
 }

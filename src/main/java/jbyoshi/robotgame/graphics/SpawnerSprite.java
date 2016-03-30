@@ -30,7 +30,7 @@ final class SpawnerSprite extends AttackableSprite<SpawnerModel> {
 	}
 
 	@Override
-	public void drawAttackable(Graphics2D graphics, float renderTicks) {
+	void drawAttackable(Graphics2D graphics, float renderTicks) {
 		Color playerColor = model.player.getColor();
 		graphics.setColor(playerColor);
 		graphics.fillRect(0, 0, 1, 1);
@@ -61,7 +61,7 @@ final class SpawnerSprite extends AttackableSprite<SpawnerModel> {
 	}
 
 	@Override
-	public void preTick() {
+	void preTick() {
 		super.preTick();
 		if (spawning == null) totalCountdown = 0;
 		spawning = model.spawningRobot;
@@ -69,7 +69,7 @@ final class SpawnerSprite extends AttackableSprite<SpawnerModel> {
 	}
 
 	@Override
-	public void postTick() {
+	void postTick() {
 		super.postTick();
 		if (spawning != null && model.spawningRobot != spawning) {
 			RobotSprite robot = game.getSprite(spawning);

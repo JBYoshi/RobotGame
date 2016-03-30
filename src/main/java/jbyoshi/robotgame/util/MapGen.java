@@ -16,14 +16,31 @@
  */
 package jbyoshi.robotgame.util;
 
+import jbyoshi.robotgame.api.Direction;
 import jbyoshi.robotgame.api.Game;
+import jbyoshi.robotgame.api.Point;
+import jbyoshi.robotgame.model.GameModel;
+import jbyoshi.robotgame.model.PowerSourceModel;
 
 import java.util.Arrays;
+import java.util.List;
 
 public final class MapGen {
     private static final int HALF_PASSAGE_SIZE = 2;
     private static final int HALF_PASSAGE_VARIATION = 8;
-    public static boolean[][] createMap() {
+    private static final DijkstraPathFinder<Point> PATH_FINDER = new DijkstraPathFinder<Point>() {
+        @Override
+        protected int getResistance(Point from, Point to) {
+            return 1;
+        }
+
+        @Override
+        protected Iterable<Point> getNeighbors(Point point) {
+            return Arrays.stream(Direction.values()).map(point::add).map(p -> p.unaryOp(MapGen::wrap))::iterator;
+        }
+    };
+
+    public static boolean[][] createMap(GameModel model) {
         boolean[][] map = new boolean[Game.WORLD_SIZE][Game.WORLD_SIZE];
         for (int x = 0; x < map.length; x++) {
             for (int y = 0; y < map[0].length; y++) {
@@ -42,6 +59,57 @@ public final class MapGen {
         map = runPasses(map, 1, (m, x, y) -> m[x][y] && Math.random() > 0.35);
         map = runPasses(map, 6, (m, x, y) -> countWalls(m, x, y, 1) > 4);
         map = removeInaccessibleCaverns(map, Game.WORLD_SIZE / 4, Game.WORLD_SIZE / 4);
+
+        Integer[] spots = RandomHelper.choose(4, 0, 1, 2, 3, 4, 5, 6, 7);
+        final boolean[][] map1 = map;
+        for (int spot : spots) {
+            int x, y;
+            switch (spot) {
+                case 0:
+                    x = 0;
+                    y = Game.WORLD_SIZE / 4;
+                    break;
+                case 1:
+                    x = Game.WORLD_SIZE / 2;
+                    y = Game.WORLD_SIZE / 4;
+                    break;
+                case 2:
+                    x = 0;
+                    y = Game.WORLD_SIZE * 3 / 4;
+                    break;
+                case 3:
+                    x = Game.WORLD_SIZE / 2;
+                    y = Game.WORLD_SIZE * 3 / 4;
+                    break;
+                case 4:
+                    x = Game.WORLD_SIZE / 4;
+                    y = 0;
+                    break;
+                case 5:
+                    x = Game.WORLD_SIZE / 4;
+                    y = Game.WORLD_SIZE / 2;
+                    break;
+                case 6:
+                    x = Game.WORLD_SIZE * 3 / 4;
+                    y = 0;
+                    break;
+                case 7:
+                    x = Game.WORLD_SIZE * 3 / 4;
+                    y = Game.WORLD_SIZE / 2;
+                    break;
+                default:
+                    throw new AssertionError("case " + spot);
+            }
+            Point p = new Point(x, y);
+            if (map[x][y]) {
+                List<Point> path = PATH_FINDER.search(p, p1 -> !map1[p1.getX()][p1.getY()])
+                        .orElseThrow(() -> new AssertionError("Map is full!"));
+                p = path.get(path.size() - 1);
+            }
+            List<Point> path = PATH_FINDER.search(p, p1 -> map1[p1.getX()][p1.getY()])
+                    .orElseThrow(() -> new AssertionError("Map is empty!"));
+            model.add(new PowerSourceModel(path.get(path.size() - 1)));
+        }
 
         return map;
     }

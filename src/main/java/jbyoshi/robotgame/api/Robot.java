@@ -17,4 +17,7 @@
 package jbyoshi.robotgame.api;
 
 public interface Robot extends ObjectInGame, Attackable {
+    int getStoredPower();
+
+    int getMaximumPower();
 }

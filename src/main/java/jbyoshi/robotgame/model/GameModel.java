@@ -16,6 +16,7 @@
  */
 package jbyoshi.robotgame.model;
 
+import java.lang.ref.WeakReference;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -36,11 +37,14 @@ public final class GameModel {
 	public int ticks;
 	public static final int MAX_TICKS = 15 * 60;
 
+	private final WeakReference<GameModel> basedOn;
+
 	public GameModel() {
-		map = MapGen.createMap();
+		map = MapGen.createMap(this); basedOn = null;
 	}
 
 	public GameModel(GameModel other) {
+		basedOn = new WeakReference<>(other);
 		map = new boolean[other.map.length][other.map[0].length];
 		for (int x = 0; x < map.length; x++) {
 			System.arraycopy(other.map[x], 0, map[x], 0, map[0].length);
@@ -105,6 +109,11 @@ public final class GameModel {
 		if (ended) {
 			this.ended = true;
 			winner = player;
+		}
+
+		GameModel basedOn = this.basedOn == null ? null : this.basedOn.get();
+		if (basedOn != null && (!Arrays.deepEquals(map, basedOn.map) || !modelsById.equals(basedOn.modelsById))) {
+			throw new AssertionError("Cloning fail");
 		}
 	}
 

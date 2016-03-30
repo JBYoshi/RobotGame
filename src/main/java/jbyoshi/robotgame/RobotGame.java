@@ -40,6 +40,7 @@ import jbyoshi.robotgame.impl.PlayerImpl;
 import jbyoshi.robotgame.model.*;
 import jbyoshi.robotgame.script.*;
 import jbyoshi.robotgame.server.ServerThread;
+import jbyoshi.robotgame.util.RandomHelper;
 import jbyoshi.robotgame.util.updater.Update;
 import jbyoshi.robotgame.util.updater.Updater;
 
@@ -60,8 +61,8 @@ public final class RobotGame {
 	private static final PlayerImpl purple = new PlayerImpl("Purple", new Color(150, 0, 255));
 	private static final PlayerImpl pink = new PlayerImpl("Pink", Color.MAGENTA);
 	private static final PlayerImpl brown = new PlayerImpl("Brown", new Color(127, 64, 0));
-	private static final PlayerImpl[] allPlayers = new PlayerImpl[] {red, orange, yellow, green, lightBlue, darkBlue,
-			purple, pink, brown};
+	private static final List<PlayerImpl> allPlayers = Arrays.asList(red, orange, yellow, green, lightBlue, darkBlue,
+			purple, pink, brown);
 
 	private static final Updater updater = Updater.getUpdater("https://api.github.com/repos/JBYoshi/RobotGame");
 
@@ -153,18 +154,7 @@ public final class RobotGame {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            int numPlayersPerGame = 4;
-            List<PlayerImpl> currentPlayers = new ArrayList<>(numPlayersPerGame);
-            for (int playerNum = 0; playerNum < numPlayersPerGame; playerNum++) {
-                int random = (int) (Math.random() * (allPlayers.length - playerNum));
-                int i = -1;
-                do {
-					i++;
-                    while (currentPlayers.contains(allPlayers[i])) i++;
-                    random--;
-                } while (random >= 0);
-                currentPlayers.add(allPlayers[i]);
-            }
+            List<PlayerImpl> currentPlayers = RandomHelper.choose(4, allPlayers);
 
             GameModel serverModel = new GameModel();
             serverModel.add(new SpawnerModel(currentPlayers.get(0), new Point(Game.WORLD_SIZE / 4, Game.WORLD_SIZE / 4)));
@@ -184,7 +174,18 @@ public final class RobotGame {
                     return new ScriptThread(player, script);
                 }
             }).collect(Collectors.toList());
-            new ServerThread(scriptThreads).run();
+			try {
+				new ServerThread(scriptThreads).run();
+			} catch (Throwable t) {
+				t.printStackTrace();
+				for (ScriptThread client : scriptThreads) {
+					try {
+						client.gameEnded();
+					} catch (Throwable t1) {
+						t1.printStackTrace();
+					}
+				}
+			}
 
             try {
                 Thread.sleep(5000);

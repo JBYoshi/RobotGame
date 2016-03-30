@@ -18,23 +18,36 @@ package jbyoshi.robotgame.model;
 
 import jbyoshi.robotgame.api.Point;
 
-public abstract class AttackableModel extends Model {
-    public int health;
-    public final int maxHealth;
+public final class PowerSourceModel extends AttackableModel {
+    private static final int MAX_HEALTH = 100;
+    private static final int POWER_PER_HIT = 3;
 
-    AttackableModel(Point loc, int maxHealth) {
-        super(loc);
-        this.health = this.maxHealth = maxHealth;
+    public PowerSourceModel(Point loc) {
+        super(loc, MAX_HEALTH);
     }
 
+    @Override
     public void wasAttacked(RobotModel attacker, int damage) {
-        health -= damage;
-        if (health <= 0) {
-            die();
+        // Ignore given damage to preserve game balance.
+        damage = POWER_PER_HIT;
+        if (damage > health) damage = health;
+        int newPower = attacker.power + damage;
+        if (newPower > RobotModel.MAX_POWER) {
+            int over = newPower - RobotModel.MAX_POWER;
+            damage -= over;
+            if (damage == 0) return;
+            newPower = RobotModel.MAX_POWER;
         }
+        super.wasAttacked(attacker, damage);
+        attacker.power = newPower;
     }
 
+    @Override
     void die() {
-        game.remove(this);
+    }
+
+    @Override
+    void onTickStart() {
+        if (health < maxHealth) health++;
     }
 }

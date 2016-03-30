@@ -21,4 +21,5 @@ import java.awt.*;
 public final class RGColors {
     public static final Color DARK_GRAY = new Color(75, 75, 75);
     public static final Color HIGHLIGHT = new Color(90, 120, 190);
+    public static final Color POWER_COLOR = new Color(255, 255, 178);
 }

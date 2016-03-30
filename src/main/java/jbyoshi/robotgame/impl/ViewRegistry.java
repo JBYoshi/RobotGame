@@ -16,10 +16,7 @@
  */
 package jbyoshi.robotgame.impl;
 
-import jbyoshi.robotgame.model.Model;
-import jbyoshi.robotgame.model.OwnedModel;
-import jbyoshi.robotgame.model.RobotModel;
-import jbyoshi.robotgame.model.SpawnerModel;
+import jbyoshi.robotgame.model.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -52,5 +49,6 @@ final class ViewRegistry {
     static {
         registerOwned(RobotModel.class, MyRobotView::new, RobotView::new);
         registerOwned(SpawnerModel.class, MySpawnerView::new, SpawnerView::new);
+        register(PowerSourceModel.class, PowerSourceView::new);
     }
 }

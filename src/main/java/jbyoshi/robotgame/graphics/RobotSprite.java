@@ -27,8 +27,11 @@ final class RobotSprite extends AttackableSprite<RobotModel> {
 	}
 
 	@Override
-	public void drawAttackable(Graphics2D g, float renderTicks) {
+	void drawAttackable(Graphics2D g, float renderTicks) {
 		g.setColor(model.player.getColor());
 		g.fill(new Ellipse2D.Double(0, 0, 1, 1));
+		double size = 0.25 * model.power / RobotModel.MAX_POWER;
+		g.setColor(RGColors.POWER_COLOR);
+		g.fill(new Ellipse2D.Double(0.5 - size, 0.5 - size, size * 2, size * 2));
 	}
 }
