@@ -29,7 +29,7 @@ final class ViewRegistry {
     private static final Map<Class<?>, BiFunction<GameView, ? extends Model, ? extends ModelView<?>>> registry
             = new HashMap<>();
 
-    @SuppressWarnings("unckecked")
+    @SuppressWarnings("unchecked")
     static ModelView<?> wrap(Model model, GameView game) {
         return ((BiFunction<GameView, Model, ? extends ModelView<?>>) registry.get(model.getClass())).apply(game, model);
     }

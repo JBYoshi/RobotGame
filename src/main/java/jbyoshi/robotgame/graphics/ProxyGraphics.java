@@ -41,16 +41,6 @@ abstract class ProxyGraphics extends Graphics2D {
     }
 
     @Override
-    public void draw3DRect(int x, int y, int width, int height, boolean raised) {
-        delegate.draw3DRect(x, y, width, height, raised);
-    }
-
-    @Override
-    public void fill3DRect(int x, int y, int width, int height, boolean raised) {
-        delegate.fill3DRect(x, y, width, height, raised);
-    }
-
-    @Override
     public void draw(Shape s) {
         delegate.draw(s);
     }
@@ -240,11 +230,6 @@ abstract class ProxyGraphics extends Graphics2D {
         return createNew((Graphics2D) delegate.create());
     }
 
-    @Override
-    public Graphics create(int x, int y, int width, int height) {
-        return createNew((Graphics2D) delegate.create(x, y, width, height));
-    }
-
     protected abstract ProxyGraphics createNew(Graphics2D newParent);
     
     @Override
@@ -275,11 +260,6 @@ abstract class ProxyGraphics extends Graphics2D {
     @Override
     public void setFont(Font font) {
         delegate.setFont(font);
-    }
-
-    @Override
-    public FontMetrics getFontMetrics() {
-        return delegate.getFontMetrics();
     }
 
     @Override
@@ -328,11 +308,6 @@ abstract class ProxyGraphics extends Graphics2D {
     }
 
     @Override
-    public void drawRect(int x, int y, int width, int height) {
-        delegate.drawRect(x, y, width, height);
-    }
-
-    @Override
     public void clearRect(int x, int y, int width, int height) {
         delegate.clearRect(x, y, width, height);
     }
@@ -378,28 +353,8 @@ abstract class ProxyGraphics extends Graphics2D {
     }
 
     @Override
-    public void drawPolygon(Polygon p) {
-        delegate.drawPolygon(p);
-    }
-
-    @Override
     public void fillPolygon(int[] xPoints, int[] yPoints, int nPoints) {
         delegate.fillPolygon(xPoints, yPoints, nPoints);
-    }
-
-    @Override
-    public void fillPolygon(Polygon p) {
-        delegate.fillPolygon(p);
-    }
-
-    @Override
-    public void drawChars(char[] data, int offset, int length, int x, int y) {
-        delegate.drawChars(data, offset, length, x, y);
-    }
-
-    @Override
-    public void drawBytes(byte[] data, int offset, int length, int x, int y) {
-        delegate.drawBytes(data, offset, length, x, y);
     }
 
     @Override
@@ -438,21 +393,8 @@ abstract class ProxyGraphics extends Graphics2D {
     }
 
     @Override
-    public void finalize() {
-        delegate.finalize();
-        super.finalize();
-    }
-
-    @Override
     public String toString() {
-        return delegate.toString();
-    }
-
-    @Override
-    @Deprecated
-    @SuppressWarnings("deprecation")
-    public Rectangle getClipRect() {
-        return delegate.getClipRect();
+        return getClass().getName() + "[" + delegate.toString() + "]";
     }
 
     @Override

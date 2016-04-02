@@ -45,6 +45,7 @@ final class MyRobotView extends RobotView implements MyRobot {
 		addAction(new RobotAttackObjectAction(((ModelView<? extends AttackableModel>) target).model));
 	}
 
+	@Override
 	public boolean moveTo(Point loc) {
 		if (cachedPath != null && cachedPathTicks > 0 && cachedPath.getPoint(cachedPath.getLength() - 1).equals(loc)) {
 			cachedPathTicks--;
