@@ -41,12 +41,12 @@ public final class GameView implements Game {
 
 	@Override
 	public Set<MyRobotView> getMyRobots() {
-		return getMyViews(RobotModel.class, MyRobotView.class);
+		return getViews(RobotModel.class, MyRobotView.class);
 	}
 
 	@Override
 	public Set<MySpawnerView> getMySpawners() {
-		return getMyViews(SpawnerModel.class, MySpawnerView.class);
+		return getViews(SpawnerModel.class, MySpawnerView.class);
 	}
 
 	@Override
@@ -60,6 +60,11 @@ public final class GameView implements Game {
 	}
 
 	@Override
+	public Set<? extends PowerSource> getPowerSources() {
+		return getViews(PowerSourceModel.class, PowerSourceView.class);
+	}
+
+	@Override
 	public Set<? extends ObjectInGame> getObjectsNear(Point loc, int distance) {
 		Set<ModelView<?>> out = new HashSet<>();
 		getObjectsNear(loc, distance, new HashSet<>(), out);
@@ -70,10 +75,11 @@ public final class GameView implements Game {
 
 	@Override
 	public Optional<Path> createPath(Point start, Point end, Predicate<Point> isWalkable) {
+		Predicate<Point> filter = isWalkable.or(end::equals);
 		return new AStarPathFinder<Point>() {
 			@Override
 			protected Iterable<Point> getNeighbors(Point point) {
-				return Arrays.stream(Direction.values()).map(point::add).filter(isWalkable)::iterator;
+				return Arrays.stream(Direction.values()).map(point::add).filter(filter)::iterator;
 			}
 
 			@Override
@@ -97,10 +103,11 @@ public final class GameView implements Game {
 
 	@Override
 	public Optional<Path> createPath(Point start, Predicate<Point> end, Predicate<Point> isWalkable) {
+		Predicate<Point> filter = isWalkable.or(end);
 		return new DijkstraPathFinder<Point>() {
 			@Override
 			protected Iterable<Point> getNeighbors(Point point) {
-				return Arrays.stream(Direction.values()).map(point::add).filter(isWalkable)::iterator;
+				return Arrays.stream(Direction.values()).map(point::add).filter(filter)::iterator;
 			}
 
 			@Override
@@ -144,7 +151,7 @@ public final class GameView implements Game {
 		}
 	}
 
-	private <M extends Model, V extends ModelView<M>> Set<V> getMyViews(Class<M> modelType, Class<V> myViewClass) {
+	private <M extends Model, V extends ModelView<M>> Set<V> getViews(Class<M> modelType, Class<V> myViewClass) {
 		return model.getModels(modelType).stream().map(views).flatMap(StreamHelpers.casting(myViewClass))
 				.collect(StreamHelpers.toImmutableSet());
 	}

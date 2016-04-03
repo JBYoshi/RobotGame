@@ -43,7 +43,7 @@ abstract class AttackableSprite<T extends AttackableModel> extends Sprite<T> {
 		drawAttackable(g, renderTicks);
 	}
 
-	protected abstract void drawAttackable(Graphics2D g, float renderTicks);
+	abstract void drawAttackable(Graphics2D g, float renderTicks);
 
 	@Override
 	void preTick() {

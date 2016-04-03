@@ -21,7 +21,9 @@ import jbyoshi.robotgame.impl.PlayerImpl;
 import jbyoshi.robotgame.api.Direction;
 
 public final class RobotModel extends AttackableModel implements OwnedModel {
+	public static final int MAX_POWER = 30;
 	public final PlayerImpl player;
+	public int power;
 
 	public RobotModel(PlayerImpl player, Point loc) {
 		super(loc, 10);
@@ -38,5 +40,15 @@ public final class RobotModel extends AttackableModel implements OwnedModel {
 	@Override
 	public PlayerImpl getPlayer() {
 		return player;
+	}
+
+	@Override
+	public void wasAttacked(RobotModel attacker, int damage) {
+		if (power < damage) {
+			super.wasAttacked(attacker, damage - power);
+			power = 0;
+		} else {
+			power -= damage;
+		}
 	}
 }

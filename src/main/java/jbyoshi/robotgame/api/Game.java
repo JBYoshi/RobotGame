@@ -34,6 +34,8 @@ public interface Game {
 
 	Set<? extends Spawner> getEnemySpawners();
 
+	Set<? extends PowerSource> getPowerSources();
+
 	default Set<? extends ObjectInGame> getObjectsAt(Point loc) {
 		return getObjectsNear(loc, 0);
 	}

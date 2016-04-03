@@ -16,31 +16,21 @@
  */
 package jbyoshi.robotgame.impl;
 
-import jbyoshi.robotgame.api.*;
-import jbyoshi.robotgame.model.*;
+import jbyoshi.robotgame.api.PowerSource;
+import jbyoshi.robotgame.model.PowerSourceModel;
 
-class RobotView extends ModelView<RobotModel> implements Robot {
-	RobotView(GameView game, RobotModel model) {
-		super(game, model);
-	}
+final class PowerSourceView extends ModelView<PowerSourceModel> implements PowerSource {
+    PowerSourceView(GameView game, PowerSourceModel model) {
+        super(game, model);
+    }
 
-	@Override
-	public int getHealth() {
-		return model.health;
-	}
+    @Override
+    public int getHealth() {
+        return model.health;
+    }
 
-	@Override
-	public int getMaxHealth() {
-		return model.maxHealth;
-	}
-
-	@Override
-	public int getStoredPower() {
-		return model.power;
-	}
-
-	@Override
-	public int getMaximumPower() {
-		return RobotModel.MAX_POWER;
-	}
+    @Override
+    public int getMaxHealth() {
+        return model.maxHealth;
+    }
 }

@@ -14,33 +14,23 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package jbyoshi.robotgame.impl;
+package jbyoshi.robotgame.util;
 
-import jbyoshi.robotgame.api.*;
-import jbyoshi.robotgame.model.*;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
-class RobotView extends ModelView<RobotModel> implements Robot {
-	RobotView(GameView game, RobotModel model) {
-		super(game, model);
-	}
+import java.util.*;
 
-	@Override
-	public int getHealth() {
-		return model.health;
-	}
+public final class RandomHelper {
+    public static <T> List<T> choose(int num, Collection<T> values) {
+        List<T> list = new ArrayList<>(values);
+        Collections.shuffle(list);
+        return ImmutableList.copyOf(list.subList(0, num));
+    }
 
-	@Override
-	public int getMaxHealth() {
-		return model.maxHealth;
-	}
-
-	@Override
-	public int getStoredPower() {
-		return model.power;
-	}
-
-	@Override
-	public int getMaximumPower() {
-		return RobotModel.MAX_POWER;
-	}
+    public static <T> T[] choose(int num, T... values) {
+        @SuppressWarnings("unchecked")
+        final Class<T> componentType = (Class<T>) values.getClass().getComponentType();
+        return Iterables.toArray(choose(num, Arrays.<T>asList(values)), componentType);
+    }
 }

@@ -77,7 +77,9 @@ final class GameDraw {
 		if (model instanceof RobotModel) {
             sprite = new RobotSprite(this, (RobotModel) model, state);
         } else if (model instanceof SpawnerModel) {
-            sprite = new SpawnerSprite(this, (SpawnerModel) model, state);
+			sprite = new SpawnerSprite(this, (SpawnerModel) model, state);
+		} else if (model instanceof PowerSourceModel) {
+			sprite = new PowerSourceSprite(this, (PowerSourceModel) model, state);
         } else {
             throw new AssertionError("Unknown model " + model.getClass().getName());
         }

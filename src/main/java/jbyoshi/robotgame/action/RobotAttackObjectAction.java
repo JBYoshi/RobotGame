@@ -35,7 +35,7 @@ public final class RobotAttackObjectAction implements Action<RobotModel> {
 		if (targetModel != null) {
 			for (Direction dir : Direction.values()) {
 				if (attacker.loc.add(dir).equals(targetModel.loc)) {
-					targetModel.attack(3);
+					targetModel.wasAttacked(attacker, 3 + attacker.power);
 					break;
 				}
 			}
