@@ -27,10 +27,9 @@ final class MySpawnerView extends SpawnerView implements MySpawner {
 
 	@Override
 	public void startSpawn() {
-		if (model.countdown > 0) {
-			throw new IllegalStateException("Spawning in progress!");
+		if (model.countdown == 0) {
+			addAction(new SpawnerStartSpawnAction(new RobotModel(model.player, model.loc)));
 		}
-		addAction(new SpawnerStartSpawnAction(new RobotModel(model.player, model.loc)));
 	}
 
 }

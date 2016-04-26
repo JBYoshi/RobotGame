@@ -21,5 +21,5 @@ public interface MyRobot extends Robot {
 
 	void attack(Attackable target);
 
-	boolean moveTo(Point dest);
+	boolean moveTo(Located dest);
 }

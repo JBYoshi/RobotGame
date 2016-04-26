@@ -19,7 +19,7 @@ package jbyoshi.robotgame.impl;
 import jbyoshi.robotgame.api.*;
 import jbyoshi.robotgame.model.*;
 
-class RobotView extends ModelView<RobotModel> implements Robot {
+abstract class RobotView extends ModelView<RobotModel> implements Robot {
 	RobotView(GameView game, RobotModel model) {
 		super(game, model);
 	}

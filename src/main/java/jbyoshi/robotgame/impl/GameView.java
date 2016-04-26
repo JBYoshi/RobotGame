@@ -60,7 +60,7 @@ public final class GameView implements Game {
 	}
 
 	@Override
-	public Set<? extends ObjectInGame> getObjectsNear(Point loc, int distance) {
+	public Set<? extends ObjectInGame> getObjectsNear(Located loc, int distance) {
 		Set<ModelView<?>> out = new HashSet<>();
 		getObjectsNear(loc, distance, new HashSet<>(), out);
 		return out;
@@ -69,7 +69,7 @@ public final class GameView implements Game {
 	private static final int WORLD_SIZE_HALF = WORLD_SIZE / 2;
 
 	@Override
-	public Optional<Path> createPath(Point start, Point end, Predicate<Point> isWalkable) {
+	public Optional<Path> createPath(Located start, Located end, Predicate<Point> isWalkable) {
 		return new AStarPathFinder<Point>() {
 			@Override
 			protected Iterable<Point> getNeighbors(Point point) {
@@ -92,11 +92,11 @@ public final class GameView implements Game {
 			private int estimateDistance(Point a, Point b) {
 				return Math.abs(a.getX() - b.getX()) + Math.abs(a.getY() - b.getY());
 			}
-		}.search(start, end).map(points -> new Path(start, points));
+		}.search(start.getLocation(), end.getLocation()).map(points -> new Path(start.getLocation(), points));
 	}
 
 	@Override
-	public Optional<Path> createPath(Point start, Predicate<Point> end, Predicate<Point> isWalkable) {
+	public Optional<Path> createPath(Located start, Predicate<Point> end, Predicate<Point> isWalkable) {
 		return new DijkstraPathFinder<Point>() {
 			@Override
 			protected Iterable<Point> getNeighbors(Point point) {
@@ -107,18 +107,18 @@ public final class GameView implements Game {
 			protected int getResistance(Point from, Point to) {
 				return getObjectsAt(to).isEmpty() ? 1 : 1000;
 			}
-		}.search(start, end).map(points -> new Path(start, points));
+		}.search(start.getLocation(), end).map(points -> new Path(start.getLocation(), points));
 	}
 
 	@Override
-	public <T extends ObjectInGame> Optional<T> findNearest(Point start, Class<T> type, Predicate<T> acceptTarget,
+	public <T extends ObjectInGame> Optional<T> findNearest(Located start, Class<T> type, Predicate<T> acceptTarget,
 															Predicate<Point> isWalkable) {
 		Map<Point, T> objects = new HashMap<>();
 		model.getAllModels().stream().map(views).filter(type::isInstance).map(type::cast)
 				.filter(acceptTarget).forEach(view -> objects.put(view.getLocation(), view));
 
 		if (objects.isEmpty()) return Optional.empty();
-		if (objects.containsKey(start)) return Optional.of(objects.get(start));
+		if (objects.containsKey(start.getLocation())) return Optional.of(objects.get(start.getLocation()));
 		if (objects.size() == 1) {
 			// Optimize using astar.
 			return Optional.of(objects.values().iterator().next()).filter(x -> createPath(start, x.getLocation(),
@@ -133,13 +133,13 @@ public final class GameView implements Game {
 		return model.map[point.getX()][point.getY()];
 	}
 
-	private void getObjectsNear(Point loc, int distance, Set<Point> checked, Set<ModelView<?>> out) {
-		if (checked.add(loc)) {
-			model.getModelsAt(loc).stream().map(views).forEach(out::add);
+	private void getObjectsNear(Located loc, int distance, Set<Point> checked, Set<ModelView<?>> out) {
+		if (checked.add(loc.getLocation())) {
+			model.getModelsAt(loc.getLocation()).stream().map(views).forEach(out::add);
 		}
 		if (distance > 0) {
 			for (Direction dir : Direction.values()) {
-				getObjectsNear(loc.add(dir), distance - 1, checked, out);
+				getObjectsNear(loc.getLocation().add(dir), distance - 1, checked, out);
 			}
 		}
 	}

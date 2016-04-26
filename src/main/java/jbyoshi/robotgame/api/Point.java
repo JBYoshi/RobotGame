@@ -20,7 +20,7 @@ import java.util.Objects;
 import java.util.function.IntBinaryOperator;
 import java.util.function.IntUnaryOperator;
 
-public final class Point {
+public final class Point implements Located {
 	private final int x, y;
 
 	public Point(int x, int y) {
@@ -80,5 +80,10 @@ public final class Point {
 	@Override
 	public int hashCode() {
 		return Objects.hash(x, y);
+	}
+
+	@Override
+	public Point getLocation() {
+		return this;
 	}
 }

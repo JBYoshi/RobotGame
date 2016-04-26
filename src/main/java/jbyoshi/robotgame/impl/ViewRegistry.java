@@ -50,7 +50,7 @@ final class ViewRegistry {
     }
 
     static {
-        registerOwned(RobotModel.class, MyRobotView::new, RobotView::new);
-        registerOwned(SpawnerModel.class, MySpawnerView::new, SpawnerView::new);
+        registerOwned(RobotModel.class, MyRobotView::new, EnemyRobotView::new);
+        registerOwned(SpawnerModel.class, MySpawnerView::new, EnemySpawnerView::new);
     }
 }

@@ -38,29 +38,29 @@ public interface Game {
 		return getObjectsNear(loc, 0);
 	}
 
-	Set<? extends ObjectInGame> getObjectsNear(Point loc, int distance);
+	Set<? extends ObjectInGame> getObjectsNear(Located loc, int distance);
 
-	default Optional<Path> createPath(Point start, Point end) {
+	default Optional<Path> createPath(Located start, Located end) {
 		return createPath(start, end, this::isWalkable);
 	}
 
-	Optional<Path> createPath(Point start, Point end, Predicate<Point> isWalkable);
+	Optional<Path> createPath(Located start, Located end, Predicate<Point> isWalkable);
 
-	default Optional<Path> createPath(Point start, Predicate<Point> end) {
+	default Optional<Path> createPath(Located start, Predicate<Point> end) {
 		return createPath(start, end, this::isWalkable);
 	}
 
-	Optional<Path> createPath(Point start, Predicate<Point> end, Predicate<Point> isWalkable);
+	Optional<Path> createPath(Located start, Predicate<Point> end, Predicate<Point> isWalkable);
 
-	default <T extends ObjectInGame> Optional<T> findNearest(Point start, Class<T> type) {
+	default <T extends ObjectInGame> Optional<T> findNearest(Located start, Class<T> type) {
 		return findNearest(start, type, target -> true);
 	}
 
-	default <T extends ObjectInGame> Optional<T> findNearest(Point start, Class<T> type, Predicate<T> acceptTarget) {
+	default <T extends ObjectInGame> Optional<T> findNearest(Located start, Class<T> type, Predicate<T> acceptTarget) {
 		return findNearest(start, type, acceptTarget, this::isWalkable);
 	}
 
-	<T extends ObjectInGame> Optional<T> findNearest(Point start, Class<T> type, Predicate<T> acceptTarget,
+	<T extends ObjectInGame> Optional<T> findNearest(Located start, Class<T> type, Predicate<T> acceptTarget,
 													 Predicate<Point> acceptLocation);
 
 	boolean isWall(Point loc);

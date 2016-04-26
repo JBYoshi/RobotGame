@@ -20,7 +20,7 @@ import jbyoshi.robotgame.api.Player;
 
 import java.awt.*;
 
-public final class PlayerImpl implements Player {
+public class PlayerImpl implements Player {
     private final String name;
     private final Color c;
 

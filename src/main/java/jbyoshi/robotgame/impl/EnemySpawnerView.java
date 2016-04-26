@@ -16,26 +16,11 @@
  */
 package jbyoshi.robotgame.impl;
 
-import jbyoshi.robotgame.api.*;
-import jbyoshi.robotgame.model.*;
+import jbyoshi.robotgame.api.EnemySpawner;
+import jbyoshi.robotgame.model.SpawnerModel;
 
-abstract class SpawnerView extends ModelView<SpawnerModel> implements Spawner {
-	SpawnerView(GameView game, SpawnerModel model) {
-		super(game, model);
-	}
-
-	@Override
-	public int getTimeUntilSpawn() {
-		return model.countdown;
-	}
-
-	@Override
-	public int getHealth() {
-		return model.health;
-	}
-
-	@Override
-	public int getMaxHealth() {
-		return model.maxHealth;
-	}
+final class EnemySpawnerView extends SpawnerView implements EnemySpawner {
+    EnemySpawnerView(GameView game, SpawnerModel model) {
+        super(game, model);
+    }
 }

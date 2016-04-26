@@ -16,6 +16,5 @@
  */
 package jbyoshi.robotgame.api;
 
-public interface ObjectInGame {
-	Point getLocation();
+public interface ObjectInGame extends Located {
 }
